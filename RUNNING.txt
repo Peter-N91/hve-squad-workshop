@@ -42,6 +42,14 @@ SETUP AND WORK ARE DISTINCT:
    the new implementation-oriented team and stop after setup.
 5. Send the separate implementation work request.
 Case-grounded requests name knowledge-docs, not a chat attachment.
+Before the session, verify actual case comprehension in the chosen Copilot
+client: business objective and three requirements with page/section references.
+Python plus pypdf is conditional for text-based PDF extraction, not mandatory
+for a client that already reads the document. Match the client's actual Python
+environment. Package import alone is not a successful document-read check.
+For scans or difficult layouts, use approved OCR or a facilitator-provided
+plain-text copy beside the PDF in knowledge-docs. Record its source/version.
+Never use an external converter or bypass document access/protection.
 Implementation uses the agreed backlog to fulfill the first release. If the
 release is not defined, agree a coherent prioritized slice before building.
 The session can end with incomplete release items; the last 30 minutes stay

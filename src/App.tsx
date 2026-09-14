@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { agenda, baseline, installation, lessons, lifecycleSteps, observationNote, packSetup, sources, troubleshooting } from './content'
+import { agenda, baseline, installation, lessons, lifecycleSteps, observationNote, packSetup, pdfReadiness, sources, troubleshooting } from './content'
 import type { Lesson, LessonStep, Prompt } from './content'
 import { agentSelection, decodeState, defaults, missingSetup, missingTarget, renderPrompt, setupCheckId, storageKey } from './state'
 import type { SavedState, Settings } from './state'
@@ -199,6 +199,20 @@ function App() {
           <p>Configure the official <a href={sources[5].url} target="_blank" rel="noreferrer">Azure DevOps MCP</a> for your host. It needs Node and supported interactive authentication. Your organization, project, process, work-item permissions and documentation destination must be confirmed. Never paste credentials into this site, prompts or repository files.</p>
         </details>
       </div>}
+      {lesson.id === 'prepare' && <section className="pdf-readiness install-panel" aria-label="PDF readiness">
+        <span className="eyebrow">BEFORE THE WORKSHOP · TEST IN YOUR CHOSEN CLIENT</span>
+        <h2>{pdfReadiness.title}</h2>
+        <p>{pdfReadiness.requirement}</p>
+        <h3>Python is conditional, not a universal prerequisite</h3>
+        <p>{pdfReadiness.python}</p>
+        <details><summary>Optional Python setup for text-based PDFs</summary>
+          <p>Use an organization-approved Python environment. If your project uses a virtual environment, select it before running these commands. Have the Copilot client use the exact executable printed below. If Python was newly installed or PATH changed, reopen the client. Do not install additional PDF libraries merely because the agent searched for them.</p>
+          {renderPromptBlock(pdfReadiness.setup)}
+          <p className="small">This installs and checks the reader only. It does not read the case or verify extraction quality. Run the readiness conversation below afterward. See <a href="https://pypdf.readthedocs.io/en/stable/user/installation.html" target="_blank" rel="noreferrer">supported Python versions and installation guidance</a>.</p>
+        </details>
+        <h3>Scanned, protected or difficult PDFs</h3>
+        <p>{pdfReadiness.fallback}</p>
+      </section>}
       <section className="exercise-list" aria-label="Exercises">
         <div className="section-caption">{lesson.launch || lesson.continuation ? 'REVIEW CHECKPOINTS · NOT SEPARATE TASK REQUESTS' : 'PREPARE, OBSERVE AND REFLECT'}</div>
         {lesson.steps.map((step, index) => renderExercise(step, lesson.beforeInstall ? index + 3 : index))}

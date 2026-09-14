@@ -43,6 +43,12 @@ Approved Azure DevOps project / process / participant scope:
 Approved documentation destination:
 Permitted development environment:
 Missing prerequisites:
+PDF reading path (client-native / Python / approved text copy):
+Python executable and PDF reader version, if used:
+Business objective and three requirements compared with the source:
+Page/section references and any extraction errors:
+Approved text-copy filename and source/version, if used:
+Unresolved OCR, document protection or reading-access blocker:
 
 PRODUCT
 Case reference (private):

@@ -57,6 +57,8 @@ export const sources = [
   { name: 'HVE Squad plug-in: CLI and agent namespace', url: 'https://peter-n91.github.io/hve-squad-plugin/install-cli.html' },
   { name: 'HVE Squad plug-in: App installation', url: 'https://peter-n91.github.io/hve-squad-plugin/install-desktop.html' },
   { name: 'HVE Squad branding and logo', url: 'https://github.com/Peter-N91/hve-squad/tree/main/docs/assets' },
+  { name: 'pypdf installation and Python support', url: 'https://pypdf.readthedocs.io/en/stable/user/installation.html' },
+  { name: 'PDF text extraction and OCR limitations', url: 'https://pypdf.readthedocs.io/en/stable/user/extract-text.html' },
 ]
 
 export const agenda = [
@@ -100,6 +102,29 @@ export const repositorySetup: Prompt = {
     '}',
   ].join('\n'),
 }
+export const pdfReadiness = {
+  title: 'Confirm Copilot can read the business case',
+  requirement: 'Before the workshop, open your repository in the Copilot App or CLI you will actually use. Ask it to read the business case in knowledge-docs, identify the business objective and three requirements, and give page or section references. Compare its answer with the source document. Finding the file or importing a library alone is not enough.',
+  python: 'Python is optional if your client already reads the document. If it uses Python-based extraction, prepare a supported Python 3 environment and a suitable reader such as pypdf for text-based PDFs. Install the library in the same Python environment the client invokes. An installation in another terminal or virtual environment may not be visible to the App. Confirm the executable path and package version before the session.',
+  fallback: 'pypdf does not perform OCR: scanned or image-only PDFs may need an approved OCR tool or a facilitator-provided accessible text copy. Complex layouts and tables can also extract incorrectly. An approved plain-text copy can sit beside the PDF in knowledge-docs; identify its source/version and which file the agent should use. Do not upload the case to an external converter or bypass encryption, sensitivity-label or access restrictions.',
+  checkpoint: 'My chosen Copilot client read the case and I compared its objective and three requirements with the source.',
+  setup: {
+    title: 'Optional: prepare pypdf in the selected Python environment',
+    shell: true,
+    text: [
+      '& {',
+      '  $ErrorActionPreference = "Stop"',
+      '  Get-Command python -ErrorAction Stop | Out-Null',
+      '  python -c "import sys; print(sys.executable); print(sys.version)"',
+      '  if ($LASTEXITCODE -ne 0) { throw "Python is not available in this environment." }',
+      '  python -m pip install pypdf',
+      '  if ($LASTEXITCODE -ne 0) { throw "pypdf installation failed. Resolve the environment or access issue before continuing." }',
+      '  python -c "import sys, pypdf; print(sys.executable); print(\'pypdf\', pypdf.__version__)"',
+      '  if ($LASTEXITCODE -ne 0) { throw "pypdf cannot be imported in this Python environment." }',
+      '}',
+    ].join('\n'),
+  } satisfies Prompt,
+}
 export const packSetup: Prompt = {
   title: 'Supplemental Power Platform resources (APM)', shell: true,
   text: 'apm install github/awesome-copilot/agents/power-platform-expert.agent.md --target copilot\napm install github/awesome-copilot/skills/power-platform-architect --target copilot\napm install github/awesome-copilot/agents/power-platform-mcp-integration-expert.agent.md --target copilot\napm install github/awesome-copilot/skills/power-platform-mcp-connector-suite --target copilot\napm install github/awesome-copilot/skills/mcp-copilot-studio-server-generator --target copilot',
@@ -126,13 +151,13 @@ export const lessons: Lesson[] = [
       { title: 'Confirm the installation in this project', body: 'After repository and knowledge-docs preparation, use the installation panel above. For APM, authenticate GitHub and run the installation from this repository root. For the plug-in path, install both paired entries in your selected client, then open this same project. Avoid conflicting standalone HVE Core versions. If already installed, confirm the paired versions rather than reinstalling unnecessarily.' },
       { title: 'Prepare Azure DevOps access', body: 'Obtain the approved organization, project, participant scope and documentation destination. Configure the official Azure DevOps MCP server in your chosen host and authenticate through its supported sign-in flow. Confirm access before the workshop. The project process can be discovered by the squad; participants do not need to prescribe its work-item mapping.' },
       { title: 'Prepare the implementation environment', body: 'Make facilitator-approved tools and possible Power Platform specialist resources available beforehand. This installs capabilities, not a predetermined roster. Let the squad recommend the expertise it needs from the case. Prepare the appropriate toolchain and an isolated development environment; availability is not permission to modify a tenant.' },
-      { title: 'Run the readiness conversation', body: 'Select Squad Coordinator through the App dropdown or CLI /agent, then ask the question below. Installation details belong in preparation, not in a business request that dictates how the squad must operate.', prompt: {
+      { title: 'Run the readiness conversation', body: 'Select Squad Coordinator through the App dropdown or CLI /agent, then use this read-only question to check the actual document. Compare the returned objective and requirements with the source before declaring PDF readiness. If an approved text copy is used, identify that file and record it as the reading path.', prompt: {
         title: 'What you ask: am I ready to begin?', entry: 'squad',
-        text: 'Can you read knowledge-docs at the root of this repository and the business case document inside it, and tell me whether I can get started?',
+        text: 'Read the business case document in knowledge-docs at the root of this repository. What is the business objective, and what are three requirements from the document? Include page or section references so I can compare your answer with the source. For now, just read it and answer; do not start planning or implementation.',
       } },
     ],
     evidence: ['A local Git repository with the case in root-level knowledge-docs', 'An actual version record and coordinator selection in that project', 'A working Azure DevOps connection and permitted development target'],
-    checks: ['My local repository contains the readable business case in knowledge-docs.', 'I have one consistent HVE Squad/HVE Core installation.', 'I have verified Azure DevOps access and my participant scope.', 'My implementation tools and the required Power Platform resources are available.'],
+    checks: ['My local repository contains the readable business case in knowledge-docs.', 'I have one consistent HVE Squad/HVE Core installation.', 'I have verified Azure DevOps access and my participant scope.', 'My implementation tools and the required Power Platform resources are available.', pdfReadiness.checkpoint],
     recovery: 'Tell the facilitator what is blocked beforehand. Local product planning can continue without Azure DevOps, but live publication must remain marked incomplete. Watching a shared environment is a fallback, not proof that your own is ready.',
   },
   {
@@ -340,6 +365,8 @@ export const troubleshooting = [
   ['An expected check or role proposal did not happen', 'Record the missing behavior before the facilitator investigates. Do not quietly add its internal procedure to the request and present the result as automatic. Expected behavior is an observation target, not a demonstrated outcome.'],
   ['No squad state is detected', 'Normal in a fresh project. After prior work, check the current project root before creating anything. Let the squad propose initialization when it is actually needed.'],
   ['The business case cannot be found', 'Confirm that you opened the participant repository, not the website repository. The document must be inside knowledge-docs at that root, not only in a previous chat. Give the permitted local document path explicitly if the client skips ignored folders. If the format or rights block reading, request an accessible copy; do not invent its content.'],
+  ['Copilot checks for Python PDF libraries', 'Tool discovery is not itself an error. If extraction cannot proceed, confirm a suitable reader in the exact Python environment the client uses. For text-based PDFs, pypdf is one option. A successful import does not prove the case was read: compare actual extracted requirements with the source.'],
+  ['The PDF produces no text or inaccurate requirements', 'Scanned PDFs may require approved OCR or an accessible text copy; pypdf is not an OCR engine. Check tables and complex layouts against the original. Keep approved copies in knowledge-docs, record the source/version, and do not bypass document protection or send the case to an external converter.'],
   ['APM reports No harness detected', 'Use --target copilot for the pinned installation in the participant project. Authenticate GitHub to avoid anonymous rate limits. Do not run maintainer sync scripts.'],
   ['Power Platform specialists are unavailable', 'Resources must be installed and permitted before a role can use them. Installing resources does not automatically seed a roster. Let the squad identify the need, then decide on any proposed addition.'],
   ['Azure DevOps reads work, publication fails', 'Inspect permissions and tracker-write capability separately. Keep blocked status if the required execution role, handoff or skill is unavailable; do not improvise a REST/PAT substitute.'],

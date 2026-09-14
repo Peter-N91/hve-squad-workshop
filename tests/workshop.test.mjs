@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { agenda, lessons, installation, lifecycleSteps, observationNote, repositorySetup } from '../src/content.ts'
+import { agenda, lessons, installation, lifecycleSteps, observationNote, pdfReadiness, repositorySetup } from '../src/content.ts'
 import { agentSelection, decodeState, defaults, missingSetup, missingTarget, renderPrompt, setupCheckId } from '../src/state.ts'
 import { readFile } from 'node:fs/promises'
 
@@ -189,4 +189,30 @@ test('branding uses the local official logo and HVE green/blue palette', async (
   assert.match(svg, /aria-label="hve-squad logo"/)
   assert.ok(!/<script|\bonload\s*=|<foreignObject/i.test(svg))
   assert.match(html, /%BASE_URL%hve-squad-logo.svg/)
+})
+test('PDF readiness requires actual source comparison and makes Python conditional', () => {
+  const prepare = lessons.find(lesson => lesson.id === 'prepare')
+  assert.match(pdfReadiness.requirement, /three requirements/)
+  assert.match(pdfReadiness.requirement, /page or section references/)
+  assert.match(pdfReadiness.requirement, /Compare its answer with the source/)
+  assert.match(pdfReadiness.python, /Python is optional/)
+  assert.match(pdfReadiness.python, /same Python environment/)
+  assert.match(pdfReadiness.fallback, /does not perform OCR/)
+  assert.match(pdfReadiness.fallback, /approved plain-text copy/i)
+  assert.match(pdfReadiness.fallback, /access restrictions/)
+  assert.equal(prepare.checks.at(-1), pdfReadiness.checkpoint)
+  const readiness = prepare.steps.find(step => step.prompt).prompt
+  assert.match(readiness.text, /three requirements/)
+  assert.match(readiness.text, /page or section references/)
+  assert.match(readiness.text, /do not start planning or implementation/)
+})
+test('optional PDF reader setup uses one Python interpreter and surfaces install/import failures', () => {
+  assert.ok(pdfReadiness.setup.shell)
+  assert.match(pdfReadiness.setup.text, /python -m pip install pypdf/)
+  assert.match(pdfReadiness.setup.text, /sys.executable/)
+  assert.match(pdfReadiness.setup.text, /import sys, pypdf/)
+  assert.match(pdfReadiness.setup.text, /pypdf installation failed/)
+  assert.match(pdfReadiness.setup.text, /pypdf cannot be imported/)
+  assert.ok(!/PdfReader|extract_text|decrypt/.test(pdfReadiness.setup.text))
+  assert.equal(renderPrompt(pdfReadiness.setup, defaults), pdfReadiness.setup.text)
 })
