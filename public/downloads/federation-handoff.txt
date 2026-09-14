@@ -1,0 +1,55 @@
+PRODUCT TO IMPLEMENTATION | HANDOFF CHECKLIST
+
+Use with your real reviewed artifacts. This template does not authorize work.
+
+Select Squad Federation Coordinator using the App dropdown or CLI /agent.
+First send promote to preserve the existing planning team in a federation.
+Confirm completion before sending init to add a separate delivery team.
+Describe the delivery work so the profile and expertise can be recommended.
+Stop after setup, then send the separate implementation work request.
+Do not prescribe profile names, specialists or state-file layout.
+The items below are review points, not instructions to append to the request.
+Record the structure and expertise the squad actually proposes. Keep required
+approvals and report missing behavior honestly.
+
+1. Preserve product
+Confirm the existing squad is adopted, not recreated.
+Review the promotion inventory before confirming it.
+Record current artifact paths after relocation.
+Confirm decisions/history/consumption are preserved.
+docs/ and outputs/ remain at the repository root.
+
+2. Establish ownership
+Product owns business intent, assumptions and acceptance.
+Implementation owns the approved technical delivery.
+Name the unique sub-squads and check meta-routing.
+Inspect the proposed expertise and actual participating specialists.
+Identify permitted application-file changes and shared-file ownership.
+
+3. Supply evidence
+Business-case document in root-level knowledge-docs:
+BRD location:
+PRD location:
+MVE location and execution status:
+Finalized backlog handoff:
+Real work item identifier, if published:
+First-release scope and the included backlog items:
+Acceptance criteria:
+Constraints / dependencies:
+Assumptions / unanswered questions:
+
+4. Approve the bounded work
+Use the agreed first-release backlog, not an arbitrary single item.
+If no release is defined, agree a coherent prioritized slice first.
+Review the implementation plan before coding.
+Route business changes back to product.
+Separate local implementation from tenant changes.
+Require explicit approval before deployment, schema/data changes or publication.
+Record untested, blocked and incomplete outcomes honestly.
+Keep remaining release items explicit when workshop time expires.
+
+5. Resume without reset
+Read the existing registry and member state.
+Re-resolve moved artifact and ledger paths.
+Ask the selected federation agent to route work to the correct sub-squad.
+Propose the next action; do not reinitialize.

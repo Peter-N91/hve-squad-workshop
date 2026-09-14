@@ -1,0 +1,100 @@
+QUBIX HVE SQUAD WORKSHOP COMPANION
+
+Node 24+ and npm are required.
+  npm ci
+  npm run dev -- --host 127.0.0.1
+
+Production:
+  npm run lint
+  npm test
+  npm run build
+  npm run preview -- --host 127.0.0.1
+
+This repository is the GUIDE, not the participant implementation project.
+No business-case PDF, participant-generated artifacts, private correspondence,
+facilitator runbook, credentials or tenant identifiers belong in this repo.
+
+CONTENT
+src/content.ts: phase kickoff requests, review checkpoints, sources and recovery.
+src/state.ts: browser progress, agent selection and target personalization.
+src/App.tsx: App/CLI tabs, navigation, controls, local settings, print/export.
+public/downloads/: empty participant worksheets, no completed examples.
+public/hve-squad-logo.svg: official unmodified HVE Squad logo.
+public/THIRD-PARTY-NOTICES.txt: logo source and license.
+
+WORKSHOP INTERACTION
+Before either installation method, participants create their own local Git
+repository and a knowledge-docs folder at its root, then copy the privately
+supplied business case into that folder. They do not copy it into this site.
+The guide includes a guarded fresh-repository PowerShell example.
+It ignores knowledge-docs in Git by default to avoid accidental publication;
+Copilot must be allowed to read the explicitly referenced local document.
+App: select the coordinator in the agent dropdown.
+CLI: type /agent and select the coordinator.
+Then paste the same plain-language request, with no slash-prompt wrapper.
+SETUP AND WORK ARE DISTINCT:
+1. In Squad Coordinator, send init with planning context; confirm the
+   inferred product-profile team and stop after initialization.
+2. Send the separate product work request.
+3. After review/publication, select Squad Federation Coordinator and send
+   promote; confirm the existing planning work was preserved.
+4. Send init with delivery context in the existing federation; confirm
+   the new implementation-oriented team and stop after setup.
+5. Send the separate implementation work request.
+Case-grounded requests name knowledge-docs, not a chat attachment.
+Implementation uses the agreed backlog to fulfill the first release. If the
+release is not defined, agree a coherent prioritized slice before building.
+The session can end with incomplete release items; the last 30 minutes stay
+reserved for discussion.
+init and promote are messages to the selected agent, not shell commands.
+The guide has three explicit, self-reported setup checkpoints. Dependent
+Copy buttons stay disabled until setup is confirmed; these browser controls
+do not inspect the actual project or authorize the agent.
+Copied requests state business outcomes without naming internal agents,
+profiles, packs, gates, state paths or execution procedures.
+Expected automatic behavior is described separately in observation panels.
+The squad should propose its approach and required additions itself, with
+consent where required. Do not assume these requests enable autopilot.
+Business requests do not prescribe internals. The lifecycle verbs init and
+promote are intentionally explicit in the separate setup messages.
+Missing behavior must be recorded, not quietly scripted into a work request.
+The detailed stages are observation/review checkpoints, not separate tasks.
+
+PUBLICATION (requires owner review; nothing is published by local build)
+1. Review the full source and dist output for disclosure and correctness.
+2. Resolve the workshop-readiness decisions listed below.
+3. Create the intended GitHub repository with the desired owner/visibility,
+   add the remote and push only after explicitly approving publication.
+4. In repository Settings > Pages, choose GitHub Actions as the build source.
+5. Run "Publish reviewed workshop guide" manually from Actions.
+6. Use the actual deployment URL returned by the workflow.
+The publishing workflow is manual-only. CI never deploys.
+Relative Vite asset paths and hash navigation support repository subpaths.
+
+READINESS DECISIONS TO RESOLVE BEFORE PARTICIPANT DISTRIBUTION
+- Final HVE Squad and paired HVE Core versions (communicated baseline 0.16.2).
+- Actual Copilot App build, coordinator picker and MCP support.
+- Rehearsed installed revisions of supplemental Power Platform resources.
+- ADO organization/project/process, participant isolation and permissions.
+- ADO repository or Wiki destination for reviewed product documents.
+- Supported implementation toolchain and isolated Dataverse environment.
+- Case access and permission to share any case-derived content.
+
+The Session setup form lets participants enter the approved ADO targets
+locally. It does not authenticate or communicate with Azure DevOps.
+Publication requests cannot be copied before required targets are supplied.
+Product planning needs no Azure DevOps details. Publication uses ordinary
+project facts from Session setup. The project process is optional and can
+be discovered by the squad.
+Never enter credentials. Progress export includes these target settings.
+
+No completed reference solution, seeded squad state or live work-item
+publication is claimed. Recovery uses honest local planning and worksheets.
+
+PRIVACY AND PROVENANCE
+No analytics, remote fonts, case uploads or server-side storage.
+Browser settings/progress use a workshop-specific localStorage key.
+Public links open external references only on user navigation.
+Sources are listed in Resources; guidance is paraphrased and source-linked.
+MVE guidance draws on Microsoft HVE Core experiment-design (CC BY 4.0).
+The teaching sequence and prompts are original workshop adaptations.

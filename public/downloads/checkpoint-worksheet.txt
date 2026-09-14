@@ -1,0 +1,92 @@
+HVE SQUAD WORKSHOP | PERSONAL EVIDENCE WORKSHEET
+16 September 2026 | Keep the completed copy in your private project.
+
+This is a blank worksheet, not a prepared squad or completed project.
+
+HOW TO WORK
+Before APM or plug-in installation: create your own local Git repository,
+create knowledge-docs at its root, and put the supplied business case there.
+Keep the case private and refer to knowledge-docs in the requests.
+App: select the coordinator agent in the dropdown.
+CLI: use /agent to select the coordinator.
+First initialize the planning team from its purpose, then request product work.
+Later promote the existing team, then initialize delivery inside the federation.
+Only after that setup completes, send the implementation work request.
+init and promote are separate messages in the selected agent chat, not shell commands.
+Describe the work context; do not specify the profile name or internal agents.
+The squad should identify the needed approach and expertise from the case.
+Respond to its questions and required approvals in the same conversation.
+If you pause to regroup, continue the same run rather than restarting it.
+
+SETUP CHECKPOINTS (CONFIRM ACTUAL PROJECT STATE)
+Planning init: recommended profile, approved team and completion evidence:
+Product work requested only after planning init:
+Promotion: existing work preserved, adopted team name and new paths:
+Delivery init inside federation: recommended profile, approved team/name:
+Implementation requested only after promotion and delivery init:
+
+WHAT HAPPENED WITHOUT ASKING FOR IT?
+Input gaps or contradictions identified:
+Team/profile proposed and its rationale:
+Additional expertise or execution capability proposed:
+Required consent requested before additions or external changes:
+Review and evidence provided:
+Expected behavior that did NOT occur:
+Any later intervention (do not label it as unprompted behavior):
+
+PROJECT AND READINESS
+Actual project root:
+Copilot experience and version:
+HVE Squad / paired HVE Core versions:
+External Power Platform resource revisions:
+Approved Azure DevOps project / process / participant scope:
+Approved documentation destination:
+Permitted development environment:
+Missing prerequisites:
+
+PRODUCT
+Case reference (private):
+Actual business-case filename inside knowledge-docs:
+Intake verdict and blocking questions:
+BRD path and decision:
+MVE path, hypothesis, procedure, metric and threshold:
+MVE status (designed / run / blocked) and actual evidence:
+PRD path and reviewed acceptance criteria:
+Backlog plan and finalized handoff.md path:
+Agreed first-release items, dependencies and acceptance boundary:
+One assumption I challenged:
+
+AZURE DEVOPS
+Exact approved batch and operation count:
+Duplicate findings:
+Actual work item IDs and links:
+handoff-logs.md location and remaining operations:
+MVE / BRD / PRD document locations:
+Publication status and blockers:
+
+FEDERATION
+Registry path:
+Product state root:
+Implementation state root:
+Profile + installed pack roles:
+New artifact and ledger paths after promotion:
+Approved handoff and ownership boundary:
+
+IMPLEMENTATION
+First-release scope and actual item IDs (where published):
+Approved plan and local files:
+Observed test and review evidence:
+Implemented / tested / deployed (record separately):
+Incomplete or blocked acceptance criteria:
+Remaining release items (do not equate one completed item with a full release):
+
+CONTINUATION
+My self-authored next request:
+Target squad and reason:
+Next action / owner / blocker:
+
+DISCUSSION (12:00-12:30)
+Most useful artifact:
+Where human review changed the outcome:
+One limitation:
+One next use and success measure:
