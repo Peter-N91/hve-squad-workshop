@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { agenda, baseline, installation, lessons, lifecycleSteps, modeGuidance, observationNote, packSetup, pdfReadiness, sources, troubleshooting } from './content'
+import { agenda, apmCliReleaseUrl, apmCliVersion, apmVersionCheck, baseline, installation, lessons, lifecycleSteps, modeGuidance, observationNote, packSetup, pdfReadiness, sources, troubleshooting } from './content'
 import type { Lesson, LessonStep, Prompt } from './content'
 import { agentSelection, decodeState, defaults, experienceLabels, experiences, missingSetup, missingTarget, nextExperience, renderPrompt, setupCheckId, storageKey } from './state'
 import type { SavedState, Settings } from './state'
@@ -184,9 +184,16 @@ function App() {
       {lesson.id === 'prepare' && <div className="install-panel">
         <h2>3. Install after preparing the repository</h2>
         <p>Continue only once your local repository exists and the business case is inside its root-level <code>knowledge-docs</code> folder. If the paired tools are already installed, confirm them instead of reinstalling.</p>
+        <section className="concept apm-version" aria-label="Required APM CLI version">
+          <h3>APM CLI {apmCliVersion} only — not latest</h3>
+          <p>This applies whenever you use APM: the package installation path, VS Code slash prompts, and optional specialist-resource installs. Plug-in-only use does not require APM.</p>
+          <p>Use the <a href={apmCliReleaseUrl} target="_blank" rel="noreferrer">APM CLI {apmCliVersion} release</a>, not an unversioned “latest” installer or self-update. Run the check below in the terminal/client environment you will use and confirm the reported version is <strong>0.29.0</strong>. If it differs, stop and install the required release using your approved method; resolve any PATH ambiguity.</p>
+          {renderPromptBlock(apmVersionCheck)}
+          <p className="small">APM CLI {apmCliVersion} is the package-manager version. The HVE Squad package remains separately pinned to v{baseline} in the command below. The command <code>apm install</code> does not install or pin the APM CLI itself.</p>
+        </section>
         {vscode ? <section className="vscode-install" aria-label="VS Code prompt installation">
           <h3>Repository-scoped APM for the slash-prompt path</h3>
-          <p>Use VS Code with GitHub Copilot enabled and signed in. After creating this repository and knowledge-docs, install APM and authenticate GitHub, then run the pinned command in a terminal at the repository root. It deploys the agents and prompt files used by this tab.</p>
+          <p>Use VS Code with GitHub Copilot enabled and signed in. After creating this repository and knowledge-docs, install APM CLI {apmCliVersion}, confirm its version and authenticate GitHub, then run the pinned package command at the repository root. It deploys the agents and prompt files used by this tab.</p>
           {renderPromptBlock(installation.apm)}
           <p>Reload VS Code, open Copilot Chat and type <code>/</code>. Confirm the <code>/squad</code> and <code>/squad-federation</code> <strong>prompt</strong> entries are present. Choose the entry described as handing a request to the coordinator, not a same-named skill.</p>
           <p className="small">If the prompt files are already installed, inspect them rather than reinstalling. Do not layer conflicting APM and plug-in copies over each other. This tab uses APM for reproducible prompt availability; it does not alter your saved App/CLI installation choice.</p>
@@ -196,13 +203,13 @@ function App() {
         </div>
         <p>{saved.settings.install === 'plugin'
           ? 'Install both paired entries in the client you will actually use. Confirm the installed version; marketplace installation is not a version pin.'
-          : 'Run from the root of your own implementation project after installing APM and authenticating GitHub. This command pins HVE Squad to the communicated workshop baseline.'}</p>
+          : `Run from your implementation project root after confirming APM CLI ${apmCliVersion} and authenticating GitHub. This command pins the HVE Squad package separately to v${baseline}.`}</p>
         {saved.settings.install === 'plugin' && saved.settings.experience === 'app'
           ? <div className="app-install"><h3>Install through the App’s Plugins settings</h3><ol><li>Open Plugins settings and find the <code>Peter-N91/hve-squad-plugin</code> marketplace.</li><li>Install both <code>hve-squad</code> and <code>hve-squad-hve-core</code>.</li><li>Return to the agent dropdown and confirm the coordinator agents are available.</li></ol><p className="small">Use the <a href="https://peter-n91.github.io/hve-squad-plugin/install-desktop.html" target="_blank" rel="noreferrer">App installation guide</a> for the host’s current settings labels. A standalone CLI installation may use a different plug-in home.</p></div>
           : renderPromptBlock(installation[saved.settings.install])}
         </>}
         <details><summary>Power Platform pack dependencies</summary>
-          <p>The pack’s external resources are not guaranteed to be installed by HVE Squad. The commands below follow the versioned external-cast catalog. They resolve upstream default revisions: review and freeze their resolved versions before the session. APM can install these supplementary project assets even when Squad itself is installed as a plug-in.</p>
+          <p>Use APM CLI {apmCliVersion} for these commands too. The pack’s external resources are not guaranteed to be installed by HVE Squad. The commands follow the versioned external-cast catalog but resolve upstream default revisions: review and freeze those separately. APM can install supplementary project assets even when Squad itself is installed as a plug-in.</p>
           {renderPromptBlock(packSetup)}
           <p>These authoring specialists do not grant tenant permissions. PAC or connector deployment remains a separately approved action.</p>
         </details>

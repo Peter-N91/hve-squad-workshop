@@ -23,6 +23,13 @@ public/hve-squad-logo.svg: official unmodified HVE Squad logo.
 public/THIRD-PARTY-NOTICES.txt: logo source and license.
 
 WORKSHOP INTERACTION
+APM CLI MUST be v0.29.0, not latest, for all APM-based paths including
+VS Code prompt deployment and supplemental specialist-resource installs.
+Use https://github.com/microsoft/apm/releases/tag/v0.29.0 and verify
+`apm --version` reports 0.29.0 in the environment that will run the commands.
+Do not use unversioned latest installers or self-update for this workshop.
+APM CLI v0.29.0 is separate from the HVE Squad package pin v0.16.2.
+Plug-in-only users need APM only if they use the supplemental APM commands.
 Before either installation method, participants create their own local Git
 repository and a knowledge-docs folder at its root, then copy the privately
 supplied business case into that folder. They do not copy it into this site.
@@ -94,6 +101,7 @@ The publishing workflow is manual-only. CI never deploys.
 Relative Vite asset paths and hash navigation support repository subpaths.
 
 READINESS DECISIONS TO RESOLVE BEFORE PARTICIPANT DISTRIBUTION
+- APM CLI is fixed at v0.29.0; confirm it with apm --version.
 - Final HVE Squad and paired HVE Core versions (communicated baseline 0.16.2).
 - Actual Copilot App build, coordinator picker and MCP support.
 - Rehearsed installed revisions of supplemental Power Platform resources.

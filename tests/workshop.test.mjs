@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { agenda, autopilotMode, lessons, installation, lifecycleSteps, modeGuidance, observationNote, packSetup, pdfReadiness, repositorySetup } from '../src/content.ts'
+import { agenda, apmCliReleaseUrl, apmCliVersion, apmVersionCheck, autopilotMode, baseline, lessons, installation, lifecycleSteps, modeGuidance, observationNote, packSetup, pdfReadiness, repositorySetup, sources } from '../src/content.ts'
 import { agentSelection, decodeState, defaults, experiences, missingSetup, missingTarget, nextExperience, renderPrompt, setupCheckId } from '../src/state.ts'
 import { readFile } from 'node:fs/promises'
 
@@ -263,7 +263,7 @@ test('VS Code uses documented lifecycle inputs and never adds autopilot to init/
   }
 })
 test('shell commands are untouched on all tabs', () => {
-  for (const prompt of [repositorySetup, installation.apm, installation.plugin, packSetup, pdfReadiness.setup]) {
+  for (const prompt of [repositorySetup, installation.apm, installation.plugin, packSetup, pdfReadiness.setup, apmVersionCheck]) {
     for (const experience of experiences) {
       assert.equal(renderPrompt(prompt, { ...defaults, experience }), prompt.text)
       assert.ok(!renderPrompt(prompt, { ...defaults, experience }).includes(autopilotMode))
@@ -304,4 +304,17 @@ test('autopilot guidance retains scope and mandatory human approvals', () => {
   assert.match(modeGuidance, /including readiness/)
   assert.match(modeGuidance, /does not waive required approvals/)
   assert.match(modeGuidance, /read-only question/)
+})
+test('APM CLI is explicitly v0.29.0, independent of the HVE Squad package version', () => {
+  assert.equal(apmCliVersion, 'v0.29.0')
+  assert.equal(apmCliReleaseUrl, 'https://github.com/microsoft/apm/releases/tag/v0.29.0')
+  assert.ok(sources.some(source => source.url === apmCliReleaseUrl))
+  assert.equal(apmVersionCheck.text, 'apm --version')
+  assert.ok(apmVersionCheck.shell)
+  assert.equal(baseline, '0.16.2')
+  assert.match(installation.apm.text, /hve-squad#v0\.16\.2/)
+  assert.ok(!installation.apm.text.includes('hve-squad#v0.29.0'))
+  const guidance = lessons.find(lesson => lesson.id === 'prepare').steps[0].body
+  assert.match(guidance, /APM CLI v0\.29\.0, not latest/)
+  assert.match(guidance, /apm --version/)
 })

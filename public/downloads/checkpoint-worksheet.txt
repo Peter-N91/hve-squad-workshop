@@ -7,6 +7,10 @@ HOW TO WORK
 Before APM or plug-in installation: create your own local Git repository,
 create knowledge-docs at its root, and put the supplied business case there.
 Keep the case private and refer to knowledge-docs in the requests.
+Whenever using APM, use APM CLI v0.29.0 exactly, not latest.
+Run apm --version in the environment you will use; expect 0.29.0.
+Release: https://github.com/microsoft/apm/releases/tag/v0.29.0
+The APM CLI version is separate from the HVE Squad package version.
 App: select the coordinator agent in the dropdown.
 CLI: use /agent to select the coordinator.
 VS Code: use the /squad or /squad-federation PROMPT installed through APM.
@@ -44,6 +48,7 @@ PROJECT AND READINESS
 Actual project root:
 Copilot experience and version:
 HVE Squad / paired HVE Core versions:
+APM CLI version (must be v0.29.0 when used) and executable location:
 External Power Platform resource revisions:
 Approved Azure DevOps project / process / participant scope:
 Approved documentation destination:

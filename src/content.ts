@@ -44,6 +44,12 @@ export type Lesson = {
 }
 
 export const baseline = '0.16.2'
+export const apmCliVersion = 'v0.29.0'
+export const apmCliReleaseUrl = `https://github.com/microsoft/apm/releases/tag/${apmCliVersion}`
+export const apmVersionCheck: Prompt = {
+  title: `Check APM CLI ${apmCliVersion}`, shell: true,
+  text: 'apm --version',
+}
 export const autopilotMode = 'mode="autopilot"'
 export const modeGuidance = 'Use mode="autopilot" for every request other than init and promote, including readiness questions, product work, publication, implementation and resume. It is already included in the copied text. Init and promote have no autopilot flag. Shell preparation and installation commands are unchanged. Autopilot does not waive required approvals, expand the requested scope or make a read-only question permission to build.'
 export const observationNote = 'These are expected behaviors to observe, not instructions to paste. Record what actually happens. If a check or role proposal is missing, capture the gap rather than quietly adding it to the request. Required consent still applies.'
@@ -55,7 +61,7 @@ export const sources = [
   { name: 'Microsoft HVE Core: Minimum Viable Experiment', url: 'https://github.com/microsoft/hve-core/blob/7cc6dc42caf7f842e1f7aa9f3d41cb4581538f33/.github/skills/project-planning/experiment-design/SKILL.md' },
   { name: 'Official Azure DevOps MCP setup', url: 'https://github.com/microsoft/azure-devops-mcp' },
   { name: 'GitHub Copilot CLI installation', url: 'https://docs.github.com/en/copilot/how-tos/copilot-cli/install-copilot-cli' },
-  { name: 'APM quickstart', url: 'https://microsoft.github.io/apm/quickstart/' },
+  { name: `APM CLI ${apmCliVersion}: required workshop release`, url: apmCliReleaseUrl },
   { name: 'HVE Squad plug-in: CLI and agent namespace', url: 'https://peter-n91.github.io/hve-squad-plugin/install-cli.html' },
   { name: 'HVE Squad plug-in: App installation', url: 'https://peter-n91.github.io/hve-squad-plugin/install-desktop.html' },
   { name: 'HVE Squad branding and logo', url: 'https://github.com/Peter-N91/hve-squad/tree/main/docs/assets' },
@@ -82,7 +88,7 @@ export const installation: Record<'plugin' | 'apm', Prompt> = {
     text: 'copilot plugin marketplace add Peter-N91/hve-squad-plugin\ncopilot plugin install hve-squad@hve-squad-plugin\ncopilot plugin install hve-squad-hve-core@hve-squad-plugin',
   },
   apm: {
-    title: 'Repository-scoped, pinned APM installation', shell: true,
+    title: 'Install the pinned HVE Squad package', shell: true,
     text: 'apm install "Peter-N91/hve-squad#v0.16.2" --target copilot',
   },
 }
@@ -152,7 +158,7 @@ export const lessons: Lesson[] = [
       },
     ],
     steps: [
-      { title: 'Confirm the installation in this project', body: 'After repository and knowledge-docs preparation, use the installation panel above. For APM, authenticate GitHub and run the installation from this repository root. For the plug-in path, install both paired entries in your selected client, then open this same project. Avoid conflicting standalone HVE Core versions. If already installed, confirm the paired versions rather than reinstalling unnecessarily.' },
+      { title: 'Confirm the installation in this project', body: `After repository and knowledge-docs preparation, use the installation panel above. Whenever you use APM, install APM CLI ${apmCliVersion}, not latest, and confirm it with apm --version before package installation. Authenticate GitHub and work from this repository root. For the plug-in path, confirm the paired entries in your chosen client; APM is only needed if you also use it for supplemental resources.` },
       { title: 'Prepare Azure DevOps access', body: 'Obtain the approved organization, project, participant scope and documentation destination. Configure the official Azure DevOps MCP server in your chosen host and authenticate through its supported sign-in flow. Confirm access before the workshop. The project process can be discovered by the squad; participants do not need to prescribe its work-item mapping.' },
       { title: 'Prepare the implementation environment', body: 'Make facilitator-approved tools and possible Power Platform specialist resources available beforehand. This installs capabilities, not a predetermined roster. Let the squad recommend the expertise it needs from the case. Prepare the appropriate toolchain and an isolated development environment; availability is not permission to modify a tenant.' },
       { title: 'Run the readiness conversation', body: 'Use your selected client tab: App dropdown, CLI /agent or the VS Code /squad prompt. This non-setup request includes mode="autopilot" but remains read-only. Compare the returned objective and requirements with the source before declaring PDF readiness. If an approved text copy is used, identify that file and record it as the reading path.', prompt: {
@@ -374,6 +380,7 @@ export const troubleshooting = [
   ['Copilot checks for Python PDF libraries', 'Tool discovery is not itself an error. If extraction cannot proceed, confirm a suitable reader in the exact Python environment the client uses. For text-based PDFs, pypdf is one option. A successful import does not prove the case was read: compare actual extracted requirements with the source.'],
   ['The PDF produces no text or inaccurate requirements', 'Scanned PDFs may require approved OCR or an accessible text copy; pypdf is not an OCR engine. Check tables and complex layouts against the original. Keep approved copies in knowledge-docs, record the source/version, and do not bypass document protection or send the case to an external converter.'],
   ['APM reports No harness detected', 'Use --target copilot for the pinned installation in the participant project. Authenticate GitHub to avoid anonymous rate limits. Do not run maintainer sync scripts.'],
+  ['Which APM version should I use?', `Use APM CLI ${apmCliVersion} exactly, not latest. Check apm --version in the terminal/client environment you will use. If another version appears, install the workshop release through your approved method and resolve any PATH ambiguity before continuing. This CLI version is separate from the HVE Squad package version pinned in apm install.`],
   ['Power Platform specialists are unavailable', 'Resources must be installed and permitted before a role can use them. Installing resources does not automatically seed a roster. Let the squad identify the need, then decide on any proposed addition.'],
   ['Azure DevOps reads work, publication fails', 'Inspect permissions and tracker-write capability separately. Keep blocked status if the required execution role, handoff or skill is unavailable; do not improvise a REST/PAT substitute.'],
   ['Some items were created before a failure', 'Keep the real IDs and execution ledger. Resolve the failed operation and resume the remaining work after any required re-approval. Do not erase or replay the whole batch.'],
