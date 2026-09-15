@@ -8,6 +8,7 @@ export type Prompt = {
   shell?: boolean
   lifecycle?: 'init' | 'promote'
   requiresSetup?: SetupId[]
+  squadTarget?: 'implementation'
 }
 
 export type LifecycleStep = {
@@ -309,9 +310,9 @@ export const lessons: Lesson[] = [
     goal: 'Work through an agreed first-release slice of the backlog and inspect evidence against its acceptance criteria.',
     inputs: ['The new delivery team initialized in the federation', 'The agreed backlog and first-release scope', 'The business case in root-level knowledge-docs', 'Known local toolchain and permitted development environment'],
     concept: 'Setup is complete; now ask the delivery team to fulfill the agreed first release, not merely one isolated item. The release is a bounded part of the backlog. It may remain unfinished in the workshop: learning the workflow and recording the remaining work still define success.',
-    launchHint: '3. After promotion and delivery initialization, send this separate implementation request. Check that the squad uses the agreed release backlog, includes dependencies and does not silently expand to the whole application.',
+    launchHint: '3. After promotion and delivery initialization, enter the registered implementation squad name in Session setup. The guide adds squad="..." beside mode="autopilot" and keeps Copy blocked until the name is valid and setup is confirmed. Use the team name chosen during initialization, not the profile label. Then send the separate first-release work request.',
     launch: {
-      title: 'What you ask: deliver the first release from the backlog', entry: 'squad-federation', requiresSetup: ['delivery-team'],
+      title: 'What you ask: deliver the first release from the backlog', entry: 'squad-federation', requiresSetup: ['delivery-team'], squadTarget: 'implementation',
       text: 'Use our agreed backlog and knowledge-docs at the root of this repository, including the business case document inside it, to implement the first release. Work through the items in that release and meet their acceptance criteria. If the release scope is not defined yet, propose a small, coherent set of prioritized items for us to agree before building. Show what is complete, what has been tested and what remains.',
     },
     behaviors: [
@@ -372,6 +373,7 @@ export const troubleshooting = [
   ['When do I include mode="autopilot"?', 'Include it on every request except init and promote. The guide adds it automatically for App, CLI and VS Code, including readiness and resume. Do not add it to shell installation commands. Mandatory human approvals and the request scope still apply.'],
   ['The agent is missing from the picker', 'Check the project and both paired plug-ins in the current client, or APM deployment to the repository. App and standalone CLI can use different plug-in homes. A request cannot select an unavailable agent.'],
   ['Which messages are separate?', 'Planning init and the product work request are separate. Later, promote, delivery init inside the federation, and the implementation work request are three separate messages. Within a work phase, do not send a new task for every internal role.'],
+  ['Which name goes in squad="..."?', 'Use the exact registered name of the delivery team you added during federation initialization, for example delivery or implementation. This is not the profile identifier, such as architecture, unless you also gave the team that name. The guide checks the name format, not membership of your local federation.'],
   ['Where do I type init or promote?', 'App/CLI: send the lifecycle instruction with its context in the selected agent chat. VS Code: use the displayed slash prompt. Federation init/promote are prompt inputs; single-squad init is part of request text because /squad has no init input. None of these setup requests includes autopilot.'],
   ['My team is already initialized', 'Inspect and confirm the existing setup instead of recreating it. Mark the guide checkpoint only after confirming the actual state. The browser checkboxes do not initialize anything or grant approval to an agent.'],
   ['An expected check or role proposal did not happen', 'Record the missing behavior before the facilitator investigates. Do not quietly add its internal procedure to the request and present the result as automatic. Expected behavior is an observation target, not a demonstrated outcome.'],

@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { agenda, apmCliReleaseUrl, apmCliVersion, apmVersionCheck, autopilotMode, baseline, lessons, installation, lifecycleSteps, modeGuidance, observationNote, packSetup, pdfReadiness, repositorySetup, sources } from '../src/content.ts'
-import { agentSelection, decodeState, defaults, experiences, missingSetup, missingTarget, nextExperience, renderPrompt, setupCheckId } from '../src/state.ts'
+import { agentSelection, decodeState, defaults, experiences, implementationSquadError, missingSetup, missingTarget, nextExperience, renderPrompt, setupCheckId } from '../src/state.ts'
 import { readFile } from 'node:fs/promises'
 
 test('agenda is exactly 210 minutes and ends with 30 minutes of discussion', () => {
@@ -226,23 +226,25 @@ const nonSetupRequests = lessons.flatMap(lesson => [
 ]).filter(Boolean)
 const sampleSettings = {
   ...defaults, organization: 'sample-org', project: 'Release "A" \\ path',
-  participant: 'learner-01', documentTarget: 'docs\\planning',
+  participant: 'learner-01', documentTarget: 'docs\\planning', implementationSquad: 'delivery',
 }
 function parseVscode(command) {
-  const match = /^(\/squad(?:-federation)?)(?: (init|promote|mode="autopilot"))? request=(.*)$/s.exec(command)
+  const match = /^(\/squad(?:-federation)?)(?: (init|promote|mode="autopilot"))?(?: squad=("(?:[^"\\]|\\.)*"))? request=(.*)$/s.exec(command)
   assert.ok(match, `Unexpected VS Code command: ${command}`)
-  return { entry: match[1], option: match[2], request: JSON.parse(match[3]) }
+  return { entry: match[1], option: match[2], squad: match[3] ? JSON.parse(match[3]) : undefined, request: JSON.parse(match[4]) }
 }
 test('every non-setup request uses autopilot in all three hosts, including readiness and resume', () => {
   assert.equal(nonSetupRequests.length, 5)
   for (const prompt of nonSetupRequests) {
     const app = renderPrompt(prompt, { ...sampleSettings, experience: 'app' })
-    assert.ok(app.startsWith(`${autopilotMode}\n\n`), prompt.title)
+    const prefix = `${autopilotMode}${prompt.squadTarget ? ` squad="${sampleSettings.implementationSquad}"` : ''}\n\n`
+    assert.ok(app.startsWith(prefix), prompt.title)
     assert.equal(renderPrompt(prompt, { ...sampleSettings, experience: 'cli' }), app)
     const vscode = parseVscode(renderPrompt(prompt, { ...sampleSettings, experience: 'vscode' }))
     assert.equal(vscode.option, autopilotMode)
     assert.equal(vscode.entry, `/${prompt.entry ?? 'squad'}`)
-    assert.equal(vscode.request, app.slice(`${autopilotMode}\n\n`.length))
+    assert.equal(vscode.squad, prompt.squadTarget ? sampleSettings.implementationSquad : undefined)
+    assert.equal(vscode.request, app.slice(prefix.length))
   }
 })
 test('VS Code uses documented lifecycle inputs and never adds autopilot to init/promote', () => {
@@ -317,4 +319,54 @@ test('APM CLI is explicitly v0.29.0, independent of the HVE Squad package versio
   const guidance = lessons.find(lesson => lesson.id === 'prepare').steps[0].body
   assert.match(guidance, /APM CLI v0\.29\.0, not latest/)
   assert.match(guidance, /apm --version/)
+})
+test('implementation requires a valid registered squad name before rendering a usable command', () => {
+  const prompt = lessons.find(item => item.id === 'implementation').launch
+  assert.equal(prompt.squadTarget, 'implementation')
+  for (const name of ['', '   ', '\n', 'Delivery', 'delivery team', 'delivery" mode="autopilot', '../delivery', '-delivery', 'équipe']) {
+    assert.ok(implementationSquadError(name), name)
+    for (const experience of experiences) {
+      assert.throws(() => renderPrompt(prompt, { ...defaults, experience, implementationSquad: name }), /registered|lowercase/)
+    }
+  }
+})
+test('implementation adds squad beside autopilot on every client and preserves the business request', () => {
+  const prompt = lessons.find(item => item.id === 'implementation').launch
+  const settings = { ...defaults, implementationSquad: '  delivery-team-2  ' }
+  for (const experience of ['app', 'cli']) {
+    assert.equal(renderPrompt(prompt, { ...settings, experience }), `${autopilotMode} squad="delivery-team-2"\n\n${prompt.text}`)
+  }
+  const vscode = parseVscode(renderPrompt(prompt, { ...settings, experience: 'vscode' }))
+  assert.equal(vscode.entry, '/squad-federation')
+  assert.equal(vscode.option, autopilotMode)
+  assert.equal(vscode.squad, 'delivery-team-2')
+  assert.equal(vscode.request, prompt.text)
+})
+test('the implementation field does not target setup, product, publication or resume requests', () => {
+  const all = [...nonSetupRequests.filter(prompt => !prompt.squadTarget), ...lifecycleSteps.map(step => step.request)]
+  for (const prompt of all) {
+    for (const experience of experiences) {
+      assert.equal(renderPrompt(prompt, { ...sampleSettings, experience }), renderPrompt(prompt, { ...sampleSettings, experience, implementationSquad: '' }))
+    }
+  }
+})
+test('legacy browser state migrates the new field without losing progress or target settings', () => {
+  const { implementationSquad, ...legacySettings } = sampleSettings
+  const old = { schema: 1, checked: ['setup:planning-team', 'setup:promote', 'setup:delivery-team', 'product-0'], settings: legacySettings }
+  const migrated = decodeState(JSON.stringify(old))
+  assert.equal(migrated.settings.implementationSquad, '')
+  assert.deepEqual(migrated.checked, old.checked)
+  assert.equal(migrated.settings.project, old.settings.project)
+  assert.equal(migrated.settings.install, old.settings.install)
+  const restored = decodeState(JSON.stringify({ ...old, settings: { ...legacySettings, implementationSquad } }))
+  assert.equal(restored.settings.implementationSquad, implementationSquad)
+  assert.throws(() => decodeState(JSON.stringify({ ...old, settings: { ...legacySettings, implementationSquad: 12 } })), /implementationSquad/)
+})
+test('squad selection never bypasses lifecycle setup prerequisites or invents a profile mapping', () => {
+  const prompt = lessons.find(item => item.id === 'implementation').launch
+  assert.deepEqual(missingSetup(prompt, []).map(step => step.id), ['planning-team', 'promote', 'delivery-team'])
+  assert.equal(implementationSquadError('architecture'), '')
+  assert.equal(implementationSquadError('delivery'), '')
+  assert.throws(() => renderPrompt({ ...prompt, lifecycle: 'init' }, sampleSettings), /only on a federation work request/)
+  assert.throws(() => renderPrompt({ ...prompt, entry: 'squad' }, sampleSettings), /only on a federation work request/)
 })

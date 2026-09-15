@@ -59,6 +59,12 @@ SETUP AND WORK ARE DISTINCT:
 4. Send init with delivery context in the existing federation; confirm
    the new implementation-oriented team and stop after setup.
 5. Send the separate implementation work request.
+   Enter its registered delivery-team name in Session setup first.
+   Copy stays blocked for a blank/invalid name or incomplete setup checkpoints.
+   App/CLI header: mode="autopilot" squad="delivery"
+   VS Code: /squad-federation mode="autopilot" squad="delivery" request="..."
+   Replace delivery with the actual team name, not a profile identifier.
+   The guide checks lowercase name syntax, not local federation membership.
 Case-grounded requests name knowledge-docs, not a chat attachment.
 Before the session, verify actual case comprehension in the chosen Copilot
 client: business objective and three requirements with page/section references.

@@ -9,6 +9,10 @@ Confirm completion before sending init to add a separate delivery team.
 Describe the delivery work so the profile and expertise can be recommended.
 Stop after setup, then send the separate implementation work request.
 Use mode="autopilot" on the implementation and resume requests.
+For implementation, enter the registered delivery-team name in Session setup.
+Copy unlocks only with a valid name and confirmed setup; the request includes
+mode="autopilot" squad="your-registered-team-name".
+Use the team name chosen at initialization, not its profile label.
 Do not include autopilot on init or promote. Keep all required approvals.
 Do not prescribe profile names, specialists or state-file layout.
 The items below are review points, not instructions to append to the request.

@@ -16,11 +16,12 @@ export type Settings = {
   area: string
   iteration: string
   documentTarget: string
+  implementationSquad: string
 }
 export type SavedState = { schema: 1; checked: string[]; settings: Settings }
 export const defaults: Settings = {
   experience: 'cli', install: 'plugin', organization: '', project: '', process: '',
-  participant: '', area: '', iteration: '', documentTarget: '',
+  participant: '', area: '', iteration: '', documentTarget: '', implementationSquad: '',
 }
 export const storageKey = 'qubix-hve-workshop-2026-09-16-v1'
 export function nextExperience(current: Experience, key: string): Experience | undefined {
@@ -64,6 +65,8 @@ export function decodeState(raw: string | null): SavedState {
   const settings = { ...defaults }
   const input = data.settings as Record<string, unknown>
   for (const key of Object.keys(defaults) as (keyof Settings)[]) {
+    // Existing v1 browser data predates the implementation target field.
+    if (key === 'implementationSquad' && input[key] === undefined) continue
     if (typeof input[key] !== 'string') throw new Error(`Missing saved setting: ${key}.`)
     if (key !== 'experience' && key !== 'install') settings[key] = input[key].slice(0, 300)
   }
@@ -79,6 +82,14 @@ export function missingTarget(settings: Settings): string[] {
     ['participant', 'participant prefix'], ['documentTarget', 'documentation destination'],
   ]
   return required.filter(([key]) => !settings[key].trim()).map(([, label]) => label)
+}
+export function implementationSquadError(value: string): string {
+  const name = value.trim()
+  if (!name) return 'Enter the registered implementation squad name in Session setup.'
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(name)) {
+    return 'Use the registered lowercase team name: letters, digits and hyphens, starting with a letter or digit.'
+  }
+  return ''
 }
 export function agentSelection(entry: Prompt['entry'], settings: Settings) {
   const federation = entry === 'squad-federation'
@@ -103,6 +114,15 @@ export function agentSelection(entry: Prompt['entry'], settings: Settings) {
 }
 export function renderPrompt(prompt: Prompt, settings: Settings): string {
   if (prompt.shell) return prompt.text
+  let squadOption = ''
+  if (prompt.squadTarget) {
+    if (prompt.entry !== 'squad-federation' || prompt.lifecycle) {
+      throw new Error('An implementation squad target belongs only on a federation work request.')
+    }
+    const error = implementationSquadError(settings.implementationSquad)
+    if (error) throw new Error(error)
+    squadOption = ` squad=${JSON.stringify(settings.implementationSquad.trim())}`
+  }
   let request = prompt.text
   if (prompt.target) {
     const missing = missingTarget(settings)
@@ -132,7 +152,7 @@ export function renderPrompt(prompt: Prompt, settings: Settings): string {
       // The single-squad prompt has no init input; express setup intent in request.
       return `/${entry} request=${JSON.stringify(`${prompt.lifecycle}\n\n${request}`)}`
     }
-    return `/${entry} ${autopilotMode} request=${JSON.stringify(request)}`
+    return `/${entry} ${autopilotMode}${squadOption} request=${JSON.stringify(request)}`
   }
-  return `${prompt.lifecycle ?? autopilotMode}\n\n${request}`
+  return `${prompt.lifecycle ?? autopilotMode}${squadOption}\n\n${request}`
 }

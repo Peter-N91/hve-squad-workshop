@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { agenda, apmCliReleaseUrl, apmCliVersion, apmVersionCheck, baseline, installation, lessons, lifecycleSteps, modeGuidance, observationNote, packSetup, pdfReadiness, sources, troubleshooting } from './content'
 import type { Lesson, LessonStep, Prompt } from './content'
-import { agentSelection, decodeState, defaults, experienceLabels, experiences, missingSetup, missingTarget, nextExperience, renderPrompt, setupCheckId, storageKey } from './state'
+import { agentSelection, decodeState, defaults, experienceLabels, experiences, implementationSquadError, missingSetup, missingTarget, nextExperience, renderPrompt, setupCheckId, storageKey } from './state'
 import type { SavedState, Settings } from './state'
 
 const checkIds = new Set([
@@ -104,13 +104,18 @@ function App() {
   function renderPromptBlock(prompt: Prompt) {
     const missing = prompt.target === true ? missingTarget(saved.settings) : []
     const pending = missingSetup(prompt, saved.checked)
-    const text = renderPrompt(missing.length ? { ...prompt, target: false } : prompt, saved.settings)
+    const squadError = prompt.squadTarget ? implementationSquadError(saved.settings.implementationSquad) : ''
+    const text = renderPrompt({
+      ...prompt,
+      target: missing.length ? false : prompt.target,
+      squadTarget: squadError ? undefined : prompt.squadTarget,
+    }, saved.settings)
     const selectedAgent = agentSelection(prompt.entry, saved.settings)
     return <div className="prompt-block">
       <div className="prompt-toolbar">
         <span>{prompt.shell ? 'POWERSHELL · PROJECT PREPARATION / INSTALLATION'
           : `${vscode ? 'VS CODE PROMPT' : 'SELECTED AGENT CHAT'} · ${prompt.lifecycle ? 'SETUP · NO AUTOPILOT' : 'MODE="AUTOPILOT"'}`}</span>
-        <button type="button" disabled={missing.length > 0 || pending.length > 0} onClick={() => copy(text)}>Copy</button>
+        <button type="button" disabled={missing.length > 0 || pending.length > 0 || !!squadError} onClick={() => copy(text)}>Copy</button>
       </div>
       <h4>{prompt.title}</h4>
       {!prompt.shell && <p className="agent-hint">{selectedAgent.instruction} {prompt.lifecycle
@@ -125,6 +130,11 @@ function App() {
       {missing.length > 0 && <div className="prompt-warning">
         Copy is locked until Session setup contains: {missing.join(', ')}.
         <button type="button" onClick={() => { setSetupOpen(true); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>Open Session setup</button>
+      </div>}
+      {squadError && <div className="prompt-warning" role="alert">
+        Copy is locked. {squadError}
+        <p>Use the delivery team’s registered name, not its profile label. The squad selector will appear beside mode="autopilot" once the field is valid.</p>
+        <button type="button" onClick={() => { setSetupOpen(true); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>Set implementation squad</button>
       </div>}
     </div>
   }
@@ -259,6 +269,7 @@ function App() {
     ['area', 'Area path (if assigned)', 'Leave empty to ask before publication'],
     ['iteration', 'Iteration path (if assigned)', 'Leave empty to ask before publication'],
     ['documentTarget', 'Planning-document destination', 'Approved Azure DevOps repo/path or Wiki'],
+    ['implementationSquad', 'Implementation squad name', 'Registered team name, e.g. delivery'],
   ]
 
   return <div className={focusMode ? 'app focus-mode' : 'app'}>
@@ -274,7 +285,14 @@ function App() {
     </header>
     {setupOpen && <section className="session-setup" aria-label="Session setup">
       <div className="setup-heading"><div><h2>Your session setup</h2><p>Only in this browser. No credentials, case content or customer data. Values are not sent to a server.</p></div><button type="button" onClick={() => setSetupOpen(false)}>Close setup</button></div>
-      <div className="settings-grid">{settingsFields.map(([key, label, placeholder]) => <label key={key}>{label}<input value={saved.settings[key]} maxLength={300} placeholder={placeholder} onChange={event => updateSetting(key, event.target.value)} /></label>)}</div>
+      <div className="settings-grid">{settingsFields.map(([key, label, placeholder]) => <label key={key}>{label}<input
+        value={saved.settings[key]} maxLength={300} placeholder={placeholder} aria-label={label}
+        aria-invalid={key === 'implementationSquad' && !!saved.settings[key] && !!implementationSquadError(saved.settings[key])}
+        aria-describedby={key === 'implementationSquad' ? 'implementation-squad-help' : undefined}
+        onChange={event => updateSetting(key, event.target.value)} />
+        {key === 'implementationSquad' && saved.settings[key] && implementationSquadError(saved.settings[key]) && <span role="alert">{implementationSquadError(saved.settings[key])}</span>}
+      </label>)}</div>
+      <p id="implementation-squad-help" className="small"><strong>Implementation target:</strong> enter the exact team name registered when you initialized delivery in the federation. A profile label such as architecture is not the target unless the team also has that name. This field is stored only in this browser; the guide cannot verify local federation membership.</p>
       <p className="small">This personalizes prompt text; it does not configure or authenticate Azure DevOps. Copying a prompt is not approval to execute it. The organization/project and destination must be supplied by the facilitator.</p>
     </section>}
     <div className="shell">
