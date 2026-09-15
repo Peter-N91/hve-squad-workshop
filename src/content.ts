@@ -44,6 +44,8 @@ export type Lesson = {
 }
 
 export const baseline = '0.16.2'
+export const autopilotMode = 'mode="autopilot"'
+export const modeGuidance = 'Use mode="autopilot" for every request other than init and promote, including readiness questions, product work, publication, implementation and resume. It is already included in the copied text. Init and promote have no autopilot flag. Shell preparation and installation commands are unchanged. Autopilot does not waive required approvals, expand the requested scope or make a read-only question permission to build.'
 export const observationNote = 'These are expected behaviors to observe, not instructions to paste. Record what actually happens. If a check or role proposal is missing, capture the gap rather than quietly adding it to the request. Required consent still applies.'
 export const sources = [
   { name: 'HVE Squad v0.16.2: usage and gates', url: 'https://github.com/Peter-N91/hve-squad/blob/v0.16.2/docs/usage.html' },
@@ -59,6 +61,8 @@ export const sources = [
   { name: 'HVE Squad branding and logo', url: 'https://github.com/Peter-N91/hve-squad/tree/main/docs/assets' },
   { name: 'pypdf installation and Python support', url: 'https://pypdf.readthedocs.io/en/stable/user/installation.html' },
   { name: 'PDF text extraction and OCR limitations', url: 'https://pypdf.readthedocs.io/en/stable/user/extract-text.html' },
+  { name: 'VS Code: versioned squad prompt inputs', url: 'https://github.com/Peter-N91/hve-squad/blob/v0.16.2/squad-src/.github/prompts/squad/squad.prompt.md' },
+  { name: 'VS Code: versioned federation prompt inputs', url: 'https://github.com/Peter-N91/hve-squad/blob/v0.16.2/squad-src/.github/prompts/squad/squad-federation.prompt.md' },
 ]
 
 export const agenda = [
@@ -104,7 +108,7 @@ export const repositorySetup: Prompt = {
 }
 export const pdfReadiness = {
   title: 'Confirm Copilot can read the business case',
-  requirement: 'Before the workshop, open your repository in the Copilot App or CLI you will actually use. Ask it to read the business case in knowledge-docs, identify the business objective and three requirements, and give page or section references. Compare its answer with the source document. Finding the file or importing a library alone is not enough.',
+  requirement: 'Before the workshop, open your repository in the Copilot App, CLI or VS Code you will actually use. Ask it to read the business case in knowledge-docs, identify the business objective and three requirements, and give page or section references. Compare its answer with the source document. Finding the file or importing a library alone is not enough.',
   python: 'Python is optional if your client already reads the document. If it uses Python-based extraction, prepare a supported Python 3 environment and a suitable reader such as pypdf for text-based PDFs. Install the library in the same Python environment the client invokes. An installation in another terminal or virtual environment may not be visible to the App. Confirm the executable path and package version before the session.',
   fallback: 'pypdf does not perform OCR: scanned or image-only PDFs may need an approved OCR tool or a facilitator-provided accessible text copy. Complex layouts and tables can also extract incorrectly. An approved plain-text copy can sit beside the PDF in knowledge-docs; identify its source/version and which file the agent should use. Do not upload the case to an external converter or bypass encryption, sensitivity-label or access restrictions.',
   checkpoint: 'My chosen Copilot client read the case and I compared its objective and three requirements with the source.',
@@ -151,7 +155,7 @@ export const lessons: Lesson[] = [
       { title: 'Confirm the installation in this project', body: 'After repository and knowledge-docs preparation, use the installation panel above. For APM, authenticate GitHub and run the installation from this repository root. For the plug-in path, install both paired entries in your selected client, then open this same project. Avoid conflicting standalone HVE Core versions. If already installed, confirm the paired versions rather than reinstalling unnecessarily.' },
       { title: 'Prepare Azure DevOps access', body: 'Obtain the approved organization, project, participant scope and documentation destination. Configure the official Azure DevOps MCP server in your chosen host and authenticate through its supported sign-in flow. Confirm access before the workshop. The project process can be discovered by the squad; participants do not need to prescribe its work-item mapping.' },
       { title: 'Prepare the implementation environment', body: 'Make facilitator-approved tools and possible Power Platform specialist resources available beforehand. This installs capabilities, not a predetermined roster. Let the squad recommend the expertise it needs from the case. Prepare the appropriate toolchain and an isolated development environment; availability is not permission to modify a tenant.' },
-      { title: 'Run the readiness conversation', body: 'Select Squad Coordinator through the App dropdown or CLI /agent, then use this read-only question to check the actual document. Compare the returned objective and requirements with the source before declaring PDF readiness. If an approved text copy is used, identify that file and record it as the reading path.', prompt: {
+      { title: 'Run the readiness conversation', body: 'Use your selected client tab: App dropdown, CLI /agent or the VS Code /squad prompt. This non-setup request includes mode="autopilot" but remains read-only. Compare the returned objective and requirements with the source before declaring PDF readiness. If an approved text copy is used, identify that file and record it as the reading path.', prompt: {
         title: 'What you ask: am I ready to begin?', entry: 'squad',
         text: 'Read the business case document in knowledge-docs at the root of this repository. What is the business objective, and what are three requirements from the document? Include page or section references so I can compare your answer with the source. For now, just read it and answer; do not start planning or implementation.',
       } },
@@ -167,7 +171,7 @@ export const lessons: Lesson[] = [
     concept: 'You are the project owner, not the author of the squad’s operating procedure. Ask for useful outcomes, answer real questions and inspect the evidence. Finishing the application is not the exit criterion.',
     steps: [
       { title: 'Follow the complete chain', body: 'Initialize the planning team → send the product request → review and publish → promote the existing team → initialize delivery inside the federation → send the implementation request. Setup and work are separate conversations, not one combined kickoff.' },
-      { title: 'Separate lifecycle from business work', body: 'Select the agent through the host UI. Use init and promote as lifecycle instructions inside that agent chat, not shell or skill commands. Describe the work so the agent recommends a profile. Once setup is confirmed, send the ordinary business request without naming internal roles or gates.' },
+      { title: 'Separate lifecycle from business work', body: 'Use the selected client tab. App and CLI select the agent first; VS Code uses the squad prompt. Init and promote are setup requests without autopilot. Every other request includes mode="autopilot"; the business wording still describes the outcome rather than internal roles or gates. Required approvals remain.' },
       { title: 'Keep an honest evidence trail', body: 'Record what the squad did without prompting, what needed a business answer and what was missing. Do not add a missing internal instruction and then describe the resulting behavior as automatic. Browser progress is self-reported and visible only to you.' },
     ],
     evidence: ['A clear project boundary', 'A personal record of observed behavior and decisions'],
@@ -182,7 +186,7 @@ export const lessons: Lesson[] = [
     setup: [{
       id: 'planning-team',
       title: '1. Initialize the planning team',
-      description: 'In your fresh participant project, select Squad Coordinator. Send init with the planning context below. Review the recommendation, naming and approval choices, then confirm setup. If a suitable team already exists, inspect and reuse it rather than rebuilding it.',
+      description: 'In your fresh participant project, use the selected tab to address Squad Coordinator. Send the planning init without autopilot. Review the recommendation, naming and approval choices, then confirm setup. If a suitable team already exists, inspect and reuse it rather than rebuilding it.',
       request: {
         title: 'Initialize from the purpose of the work', entry: 'squad', lifecycle: 'init',
         text: 'Use knowledge-docs at the root of this repository and the business case document inside it as context. We need to understand the business need, define business and product requirements, test key assumptions and prioritize a backlog before development. Set up a team for this planning work. Stop once the team is ready; I will send the work request next.',
@@ -250,7 +254,7 @@ export const lessons: Lesson[] = [
       {
         id: 'promote',
         title: '1. Promote the existing planning team',
-        description: 'Switch to Squad Federation Coordinator. Start from the existing single planning squad and its completed product work. Send promote first, review the relocation proposal and confirm it. If a federation already exists, inspect it instead of promoting again.',
+        description: 'Switch to Squad Federation Coordinator in the App/CLI, or use the VS Code /squad-federation prompt. Start from the existing planning squad and completed product work. Send promote without autopilot, review the relocation proposal and confirm it. If a federation already exists, inspect it instead of promoting again.',
         request: {
           title: 'Promote, preserving the existing work', entry: 'squad-federation', lifecycle: 'promote', requiresSetup: ['planning-team'],
           text: 'We want to keep this planning team and everything it has produced, while making room for a separate team to build the solution. Prepare that transition and show me what will change. Stop after the existing team has been preserved in the new structure; do not add a delivery team or start implementation yet.',
@@ -266,7 +270,7 @@ export const lessons: Lesson[] = [
       {
         id: 'delivery-team',
         title: '2. Initialize delivery inside the federation',
-        description: 'Stay with Squad Federation Coordinator after promotion succeeds. Send init with the delivery context. Because the federation now exists, init expands it with a new team rather than recreating the whole structure.',
+        description: 'After promotion succeeds, stay with the federation agent or VS Code /squad-federation prompt. Send init with delivery context and no autopilot. Because the federation now exists, init adds a new team rather than recreating the whole structure.',
         request: {
           title: 'Initialize a new team from the implementation need', entry: 'squad-federation', lifecycle: 'init', requiresSetup: ['promote'],
           text: 'Use knowledge-docs at the root of this repository, the business case document inside it and our agreed backlog as context. Add a separate team to work out the technical design, build and test the solution. Keep the planning team’s decisions and responsibilities separate. Set up this delivery team without starting implementation; I will send that request next.',
@@ -305,7 +309,7 @@ export const lessons: Lesson[] = [
       text: 'Use our agreed backlog and knowledge-docs at the root of this repository, including the business case document inside it, to implement the first release. Work through the items in that release and meet their acceptance criteria. If the release scope is not defined yet, propose a small, coherent set of prioritized items for us to agree before building. Show what is complete, what has been tested and what remains.',
     },
     behaviors: [
-      'The squad identifies the agreed first-release items and their dependencies, then coordinates implementation and review under its actual working mode.',
+      'The squad identifies the agreed first-release items and dependencies, then coordinates implementation and review in the explicitly requested autopilot mode, retaining the required human gates.',
       'It raises business ambiguity and impactful changes for human decisions without being told the names of its gates.',
       'It distinguishes generated work, observed tests, deployment and remaining gaps.',
     ],
@@ -325,7 +329,7 @@ export const lessons: Lesson[] = [
     concept: 'You should be able to pick up the project without telling the squad where its registry, decisions or member state are stored. Watch whether it recognizes and uses the existing work.',
     behaviors: ['The squad recognizes the project, retrieves relevant history and proposes a next action without being given internal paths.'],
     steps: [
-      { title: '1. Resume from a fresh conversation (5 min)', body: 'Open a fresh conversation in the same project and select the federation agent through the App dropdown or CLI /agent. Ask the ordinary project question below.', prompt: {
+      { title: '1. Resume from a fresh conversation (5 min)', body: 'Open a fresh conversation in the same project. Select the federation agent through the App dropdown or CLI /agent, or run /squad-federation in VS Code. The resume request below includes mode="autopilot" and asks only for current status and the next recommendation.', prompt: {
         title: 'What you ask: where did we get to?', entry: 'squad-federation',
         text: "Let's pick up where we left off on the first release. Using our backlog and the business case in knowledge-docs, what have we completed, what is still open, and what should we work on next?",
       } },
@@ -357,10 +361,12 @@ export const lifecycleSteps = lessons.flatMap(lesson =>
 )
 
 export const troubleshooting = [
-  ['I see skills or prompts instead of the agent', 'Use the App agent dropdown or CLI /agent. Select Squad Coordinator for product/publication and Squad Federation Coordinator for federation/delivery. Plug-in labels may be namespaced. Do not select a similarly named skill.'],
+  ['Which entry point should I use?', 'App: select the coordinator from the agent dropdown. CLI: select it with /agent. VS Code: use /squad or /squad-federation prompt files deployed by APM. Pick the prompt described as handing a request to the coordinator, not the similarly named skill.'],
+  ['The VS Code slash prompt is missing', 'Open the actual participant repository and confirm that the repository-scoped APM installation deployed .github/prompts entries. Reload VS Code if needed. A plug-in skill with the same name is not a substitute for the documented prompt and its inputs. Avoid loading duplicate Squad/Core distributions.'],
+  ['When do I include mode="autopilot"?', 'Include it on every request except init and promote. The guide adds it automatically for App, CLI and VS Code, including readiness and resume. Do not add it to shell installation commands. Mandatory human approvals and the request scope still apply.'],
   ['The agent is missing from the picker', 'Check the project and both paired plug-ins in the current client, or APM deployment to the repository. App and standalone CLI can use different plug-in homes. A request cannot select an unavailable agent.'],
   ['Which messages are separate?', 'Planning init and the product work request are separate. Later, promote, delivery init inside the federation, and the implementation work request are three separate messages. Within a work phase, do not send a new task for every internal role.'],
-  ['Where do I type init or promote?', 'Send the lifecycle instruction with its context in the selected agent’s chat. These are not standalone terminal commands or slash-skill invocations. Use the App dropdown or CLI /agent only to select the entry agent.'],
+  ['Where do I type init or promote?', 'App/CLI: send the lifecycle instruction with its context in the selected agent chat. VS Code: use the displayed slash prompt. Federation init/promote are prompt inputs; single-squad init is part of request text because /squad has no init input. None of these setup requests includes autopilot.'],
   ['My team is already initialized', 'Inspect and confirm the existing setup instead of recreating it. Mark the guide checkpoint only after confirming the actual state. The browser checkboxes do not initialize anything or grant approval to an agent.'],
   ['An expected check or role proposal did not happen', 'Record the missing behavior before the facilitator investigates. Do not quietly add its internal procedure to the request and present the result as automatic. Expected behavior is an observation target, not a demonstrated outcome.'],
   ['No squad state is detected', 'Normal in a fresh project. After prior work, check the current project root before creating anything. Let the squad propose initialization when it is actually needed.'],

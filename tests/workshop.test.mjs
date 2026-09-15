@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { agenda, lessons, installation, lifecycleSteps, observationNote, pdfReadiness, repositorySetup } from '../src/content.ts'
-import { agentSelection, decodeState, defaults, missingSetup, missingTarget, renderPrompt, setupCheckId } from '../src/state.ts'
+import { agenda, autopilotMode, lessons, installation, lifecycleSteps, modeGuidance, observationNote, packSetup, pdfReadiness, repositorySetup } from '../src/content.ts'
+import { agentSelection, decodeState, defaults, experiences, missingSetup, missingTarget, nextExperience, renderPrompt, setupCheckId } from '../src/state.ts'
 import { readFile } from 'node:fs/promises'
 
 test('agenda is exactly 210 minutes and ends with 30 minutes of discussion', () => {
@@ -34,10 +34,10 @@ test('target prompts are blocked until approved target fields are provided', () 
   assert.match(renderPrompt(prompt, settings), /test-project/)
   assert.match(renderPrompt(prompt, settings), /Inspect only/)
 })
-test('both hosts receive identical plain-language requests without activation commands', () => {
+test('App and CLI receive the same explicit autopilot mode followed by business wording', () => {
   const prompt = { title: 'Test', text: 'Ask "why".\nWait.', entry: 'squad-federation' }
-  assert.equal(renderPrompt(prompt, defaults), prompt.text)
-  assert.equal(renderPrompt(prompt, { ...defaults, experience: 'app' }), prompt.text)
+  assert.equal(renderPrompt(prompt, defaults), `${autopilotMode}\n\n${prompt.text}`)
+  assert.equal(renderPrompt(prompt, { ...defaults, experience: 'app' }), `${autopilotMode}\n\n${prompt.text}`)
   assert.equal(renderPrompt(installation.apm, { ...defaults, experience: 'app' }), installation.apm.text)
 })
 test('agent selection is host-specific and installation-aware', () => {
@@ -49,6 +49,11 @@ test('agent selection is host-specific and installation-aware', () => {
   assert.ok(!app.instruction.includes('/agent'))
   assert.equal(app.identifier, 'hve-squad:squad-federation-coordinator')
   assert.equal(agentSelection('squad', { ...defaults, install: 'apm' }).identifier, 'Squad Coordinator')
+  const vscode = agentSelection('squad-federation', { ...defaults, experience: 'vscode' })
+  assert.equal(vscode.identifier, '/squad-federation')
+  assert.match(vscode.instruction, /VS Code Copilot Chat/)
+  assert.match(vscode.instruction, /not a similarly named skill/)
+  assert.ok(!vscode.instruction.includes('/agent'))
 })
 test('one product kickoff covers the complete package, with observation-only steps', () => {
   const product = lessons.find(x => x.id === 'product')
@@ -59,7 +64,7 @@ test('one product kickoff covers the complete package, with observation-only ste
   assert.ok(product.steps.every(step => !step.prompt))
   assert.deepEqual(product.launch.requiresSetup, ['planning-team'])
   const request = renderPrompt(product.launch, defaults)
-  assert.equal(request, product.launch.text)
+  assert.equal(request, `${autopilotMode}\n\n${product.launch.text}`)
   assert.ok(product.behaviors.some(x => /intake/i.test(x)))
   assert.ok(product.behaviors.some(x => /additional roles/.test(x)))
 })
@@ -215,4 +220,88 @@ test('optional PDF reader setup uses one Python interpreter and surfaces install
   assert.match(pdfReadiness.setup.text, /pypdf cannot be imported/)
   assert.ok(!/PdfReader|extract_text|decrypt/.test(pdfReadiness.setup.text))
   assert.equal(renderPrompt(pdfReadiness.setup, defaults), pdfReadiness.setup.text)
+})
+const nonSetupRequests = lessons.flatMap(lesson => [
+  lesson.launch, ...lesson.steps.map(step => step.prompt),
+]).filter(Boolean)
+const sampleSettings = {
+  ...defaults, organization: 'sample-org', project: 'Release "A" \\ path',
+  participant: 'learner-01', documentTarget: 'docs\\planning',
+}
+function parseVscode(command) {
+  const match = /^(\/squad(?:-federation)?)(?: (init|promote|mode="autopilot"))? request=(.*)$/s.exec(command)
+  assert.ok(match, `Unexpected VS Code command: ${command}`)
+  return { entry: match[1], option: match[2], request: JSON.parse(match[3]) }
+}
+test('every non-setup request uses autopilot in all three hosts, including readiness and resume', () => {
+  assert.equal(nonSetupRequests.length, 5)
+  for (const prompt of nonSetupRequests) {
+    const app = renderPrompt(prompt, { ...sampleSettings, experience: 'app' })
+    assert.ok(app.startsWith(`${autopilotMode}\n\n`), prompt.title)
+    assert.equal(renderPrompt(prompt, { ...sampleSettings, experience: 'cli' }), app)
+    const vscode = parseVscode(renderPrompt(prompt, { ...sampleSettings, experience: 'vscode' }))
+    assert.equal(vscode.option, autopilotMode)
+    assert.equal(vscode.entry, `/${prompt.entry ?? 'squad'}`)
+    assert.equal(vscode.request, app.slice(`${autopilotMode}\n\n`.length))
+  }
+})
+test('VS Code uses documented lifecycle inputs and never adds autopilot to init/promote', () => {
+  for (const step of lifecycleSteps) {
+    for (const experience of experiences) {
+      const command = renderPrompt(step.request, { ...defaults, experience })
+      assert.ok(!command.includes(autopilotMode), step.id)
+    }
+    const result = parseVscode(renderPrompt(step.request, { ...defaults, experience: 'vscode' }))
+    assert.equal(result.entry, `/${step.request.entry}`)
+    if (step.id === 'planning-team') {
+      assert.equal(result.option, undefined)
+      assert.equal(result.request, `init\n\n${step.request.text}`)
+    } else {
+      assert.equal(result.option, step.request.lifecycle)
+      assert.equal(result.request, step.request.text)
+    }
+  }
+})
+test('shell commands are untouched on all tabs', () => {
+  for (const prompt of [repositorySetup, installation.apm, installation.plugin, packSetup, pdfReadiness.setup]) {
+    for (const experience of experiences) {
+      assert.equal(renderPrompt(prompt, { ...defaults, experience }), prompt.text)
+      assert.ok(!renderPrompt(prompt, { ...defaults, experience }).includes(autopilotMode))
+    }
+  }
+})
+test('VS Code safely quotes multiline requests and project metadata', () => {
+  const prompt = {
+    title: 'Quoted', entry: 'squad', target: true,
+    text: 'Read "knowledge-docs".\nDo not interpret \\ paths as parameters.',
+  }
+  const text = renderPrompt(prompt, sampleSettings).slice(`${autopilotMode}\n\n`.length)
+  const parsed = parseVscode(renderPrompt(prompt, { ...sampleSettings, experience: 'vscode' }))
+  assert.equal(parsed.request, text)
+  assert.ok(parsed.request.includes(JSON.stringify(sampleSettings.project)))
+  assert.throws(() => renderPrompt(prompt, { ...defaults, experience: 'vscode' }), /Complete Session setup/)
+})
+test('old App/CLI settings and new VS Code settings preserve checkpoints', () => {
+  for (const experience of experiences) {
+    const state = { schema: 1, settings: { ...sampleSettings, experience }, checked: ['product-0', 'setup:planning-team'] }
+    assert.deepEqual(decodeState(JSON.stringify(state)), state)
+  }
+})
+test('three-tab keyboard navigation wraps and supports Home/End', () => {
+  assert.equal(nextExperience('app', 'ArrowRight'), 'cli')
+  assert.equal(nextExperience('cli', 'ArrowRight'), 'vscode')
+  assert.equal(nextExperience('vscode', 'ArrowRight'), 'app')
+  assert.equal(nextExperience('app', 'ArrowLeft'), 'vscode')
+  assert.equal(nextExperience('vscode', 'ArrowLeft'), 'cli')
+  for (const current of experiences) {
+    assert.equal(nextExperience(current, 'Home'), 'app')
+    assert.equal(nextExperience(current, 'End'), 'vscode')
+    assert.equal(nextExperience(current, 'Tab'), undefined)
+  }
+})
+test('autopilot guidance retains scope and mandatory human approvals', () => {
+  assert.match(modeGuidance, /every request other than init and promote/)
+  assert.match(modeGuidance, /including readiness/)
+  assert.match(modeGuidance, /does not waive required approvals/)
+  assert.match(modeGuidance, /read-only question/)
 })

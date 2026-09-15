@@ -1,8 +1,13 @@
-import { lifecycleSteps } from './content.ts'
+import { autopilotMode, lifecycleSteps } from './content.ts'
 import type { Prompt, SetupId } from './content.ts'
 
+export const experiences = ['app', 'cli', 'vscode'] as const
+export type Experience = typeof experiences[number]
+export const experienceLabels: Record<Experience, string> = {
+  app: 'Copilot App', cli: 'Copilot CLI', vscode: 'VS Code',
+}
 export type Settings = {
-  experience: 'cli' | 'app'
+  experience: Experience
   install: 'plugin' | 'apm'
   organization: string
   project: string
@@ -18,6 +23,12 @@ export const defaults: Settings = {
   participant: '', area: '', iteration: '', documentTarget: '',
 }
 export const storageKey = 'qubix-hve-workshop-2026-09-16-v1'
+export function nextExperience(current: Experience, key: string): Experience | undefined {
+  if (key === 'Home') return experiences[0]
+  if (key === 'End') return experiences[experiences.length - 1]
+  const direction = key === 'ArrowRight' ? 1 : key === 'ArrowLeft' ? -1 : 0
+  return direction ? experiences[(experiences.indexOf(current) + direction + experiences.length) % experiences.length] : undefined
+}
 export function setupCheckId(id: SetupId): string {
   return `setup:${id}`
 }
@@ -56,7 +67,7 @@ export function decodeState(raw: string | null): SavedState {
     if (typeof input[key] !== 'string') throw new Error(`Missing saved setting: ${key}.`)
     if (key !== 'experience' && key !== 'install') settings[key] = input[key].slice(0, 300)
   }
-  if (input.experience !== 'cli' && input.experience !== 'app') throw new Error('Unknown Copilot experience.')
+  if (input.experience !== 'cli' && input.experience !== 'app' && input.experience !== 'vscode') throw new Error('Unknown Copilot experience.')
   if (input.install !== 'plugin' && input.install !== 'apm') throw new Error('Unknown installation method.')
   settings.experience = input.experience
   settings.install = input.install
@@ -72,6 +83,13 @@ export function missingTarget(settings: Settings): string[] {
 export function agentSelection(entry: Prompt['entry'], settings: Settings) {
   const federation = entry === 'squad-federation'
   const name = federation ? 'Squad Federation Coordinator' : 'Squad Coordinator'
+  if (settings.experience === 'vscode') {
+    const identifier = federation ? '/squad-federation' : '/squad'
+    return {
+      name, identifier,
+      instruction: `In VS Code Copilot Chat, run the ${identifier} prompt. Choose the prompt described as handing a request to the coordinator, not a similarly named skill.`,
+    }
+  }
   const identifier = settings.install === 'plugin'
     ? `hve-squad:${federation ? 'squad-federation-coordinator' : 'squad-coordinator'}`
     : name
@@ -85,7 +103,7 @@ export function agentSelection(entry: Prompt['entry'], settings: Settings) {
 }
 export function renderPrompt(prompt: Prompt, settings: Settings): string {
   if (prompt.shell) return prompt.text
-  let request = prompt.lifecycle ? `${prompt.lifecycle}\n\n${prompt.text}` : prompt.text
+  let request = prompt.text
   if (prompt.target) {
     const missing = missingTarget(settings)
     if (missing.length) {
@@ -105,5 +123,16 @@ export function renderPrompt(prompt: Prompt, settings: Settings): string {
       .map(([label, value]) => `${label}: ${JSON.stringify(value.trim())}`)
       .join('\n')
   }
-  return request
+  if (settings.experience === 'vscode') {
+    const entry = prompt.entry ?? 'squad'
+    if (entry === 'squad-federation' && prompt.lifecycle) {
+      return `/${entry} ${prompt.lifecycle} request=${JSON.stringify(request)}`
+    }
+    if (prompt.lifecycle) {
+      // The single-squad prompt has no init input; express setup intent in request.
+      return `/${entry} request=${JSON.stringify(`${prompt.lifecycle}\n\n${request}`)}`
+    }
+    return `/${entry} ${autopilotMode} request=${JSON.stringify(request)}`
+  }
+  return `${prompt.lifecycle ?? autopilotMode}\n\n${request}`
 }

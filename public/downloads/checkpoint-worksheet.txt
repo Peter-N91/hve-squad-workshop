@@ -9,10 +9,16 @@ create knowledge-docs at its root, and put the supplied business case there.
 Keep the case private and refer to knowledge-docs in the requests.
 App: select the coordinator agent in the dropdown.
 CLI: use /agent to select the coordinator.
+VS Code: use the /squad or /squad-federation PROMPT installed through APM.
+Every non-setup request includes mode="autopilot", including readiness and resume.
+Do not add autopilot to init or promote. Shell installation commands are unchanged.
+Autopilot retains the request scope and required human approvals.
 First initialize the planning team from its purpose, then request product work.
 Later promote the existing team, then initialize delivery inside the federation.
 Only after that setup completes, send the implementation work request.
-init and promote are separate messages in the selected agent chat, not shell commands.
+App/CLI init/promote are separate agent-chat messages; VS Code uses the displayed
+slash-prompt syntax. Single-squad init is inside request text; federation
+init/promote are separate prompt inputs. They are not shell commands.
 Describe the work context; do not specify the profile name or internal agents.
 The squad should identify the needed approach and expertise from the case.
 Respond to its questions and required approvals in the same conversation.

@@ -3,10 +3,13 @@ PRODUCT TO IMPLEMENTATION | HANDOFF CHECKLIST
 Use with your real reviewed artifacts. This template does not authorize work.
 
 Select Squad Federation Coordinator using the App dropdown or CLI /agent.
+VS Code users run the /squad-federation prompt installed through APM.
 First send promote to preserve the existing planning team in a federation.
 Confirm completion before sending init to add a separate delivery team.
 Describe the delivery work so the profile and expertise can be recommended.
 Stop after setup, then send the separate implementation work request.
+Use mode="autopilot" on the implementation and resume requests.
+Do not include autopilot on init or promote. Keep all required approvals.
 Do not prescribe profile names, specialists or state-file layout.
 The items below are review points, not instructions to append to the request.
 Record the structure and expertise the squad actually proposes. Keep required

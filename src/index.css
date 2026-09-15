@@ -117,6 +117,11 @@ progress::-webkit-progress-value { background: var(--cp-accent); border-radius: 
 .experience-panel .small { font-size: 12px; }
 .experience-panel code { overflow-wrap: anywhere; }
 .experience-panel button { flex-shrink: 0; }
+.mode-notice { margin: 16px 0 24px; padding: 16px 20px; border: 1px solid var(--cp-border); border-left: 3px solid var(--cp-accent); border-radius: 10px; background: var(--cp-accent-soft); }
+.mode-notice strong { font-size: 14px; color: var(--cp-accent); }
+.mode-notice p { font-size: 13px; color: var(--cp-text-muted); margin: 8px 0 0; }
+.vscode-install { margin-top: 20px; }
+.vscode-install p { font-size: 14px; }
 .phase-launch { margin: 32px 0; padding: 24px; border: 1px solid var(--cp-accent); border-radius: 16px; background: var(--cp-bg-elevated); }
 .phase-launch h2 { margin-top: 12px; }
 .phase-launch>p { color: var(--cp-text-muted); font-size: 14px; }

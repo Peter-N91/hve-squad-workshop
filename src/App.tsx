@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { agenda, baseline, installation, lessons, lifecycleSteps, observationNote, packSetup, pdfReadiness, sources, troubleshooting } from './content'
+import { agenda, baseline, installation, lessons, lifecycleSteps, modeGuidance, observationNote, packSetup, pdfReadiness, sources, troubleshooting } from './content'
 import type { Lesson, LessonStep, Prompt } from './content'
-import { agentSelection, decodeState, defaults, missingSetup, missingTarget, renderPrompt, setupCheckId, storageKey } from './state'
+import { agentSelection, decodeState, defaults, experienceLabels, experiences, missingSetup, missingTarget, nextExperience, renderPrompt, setupCheckId, storageKey } from './state'
 import type { SavedState, Settings } from './state'
 
 const checkIds = new Set([
@@ -69,6 +69,7 @@ function App() {
     active?.launch?.entry ?? (['federation', 'implementation', 'resume'].includes(page) ? 'squad-federation' : 'squad'),
     saved.settings,
   )
+  const vscode = saved.settings.experience === 'vscode'
   const progress = Math.round(saved.checked.length / checkIds.size * 100)
   function updateSaved(next: SavedState) {
     setSaved(next)
@@ -103,15 +104,18 @@ function App() {
   function renderPromptBlock(prompt: Prompt) {
     const missing = prompt.target === true ? missingTarget(saved.settings) : []
     const pending = missingSetup(prompt, saved.checked)
-    const text = missing.length ? prompt.text : renderPrompt(prompt, saved.settings)
+    const text = renderPrompt(missing.length ? { ...prompt, target: false } : prompt, saved.settings)
     const selectedAgent = agentSelection(prompt.entry, saved.settings)
     return <div className="prompt-block">
       <div className="prompt-toolbar">
-        <span>{prompt.shell ? 'POWERSHELL · PROJECT PREPARATION / INSTALLATION' : prompt.lifecycle ? 'LIFECYCLE · SEND IN THE SELECTED AGENT CHAT' : 'BUSINESS WORK · PASTE INTO THE SELECTED AGENT'}</span>
+        <span>{prompt.shell ? 'POWERSHELL · PROJECT PREPARATION / INSTALLATION'
+          : `${vscode ? 'VS CODE PROMPT' : 'SELECTED AGENT CHAT'} · ${prompt.lifecycle ? 'SETUP · NO AUTOPILOT' : 'MODE="AUTOPILOT"'}`}</span>
         <button type="button" disabled={missing.length > 0 || pending.length > 0} onClick={() => copy(text)}>Copy</button>
       </div>
       <h4>{prompt.title}</h4>
-      {!prompt.shell && <p className="agent-hint">{selectedAgent.instruction} Paste only the request below.</p>}
+      {!prompt.shell && <p className="agent-hint">{selectedAgent.instruction} {prompt.lifecycle
+        ? 'Setup only: do not add mode="autopilot".'
+        : 'Include mode="autopilot" as shown. Required human approvals still apply.'} Paste the complete block below.</p>}
       <pre tabIndex={0}><code>{text}</code></pre>
       {pending.length > 0 && <div className="prompt-warning">
         Complete the setup checkpoint{pending.length > 1 ? 's' : ''} first:
@@ -147,7 +151,7 @@ function App() {
       </section>}
       {lesson.setup && <section className="lifecycle-list" aria-label="Setup before work">
         <div className="eyebrow">SETUP FIRST · WORK REQUEST AFTER CONFIRMATION</div>
-        <p className="small">Send each lifecycle message separately in the selected agent’s chat. init and promote are not standalone shell commands. These checkboxes record your confirmation; they do not execute setup or approve actions for you.</p>
+        <p className="small">Send each setup request separately using your selected client tab. init and promote never include autopilot. In VS Code the guide supplies slash-prompt inputs; in App/CLI it supplies an agent-chat message. These checkboxes only record your confirmation, not actual execution or permission.</p>
         {lesson.setup.map(step => <section className="lifecycle-step" data-setup-id={step.id} key={step.id}>
           <h2>{step.title}</h2>
           <p>{step.description}</p>
@@ -180,6 +184,13 @@ function App() {
       {lesson.id === 'prepare' && <div className="install-panel">
         <h2>3. Install after preparing the repository</h2>
         <p>Continue only once your local repository exists and the business case is inside its root-level <code>knowledge-docs</code> folder. If the paired tools are already installed, confirm them instead of reinstalling.</p>
+        {vscode ? <section className="vscode-install" aria-label="VS Code prompt installation">
+          <h3>Repository-scoped APM for the slash-prompt path</h3>
+          <p>Use VS Code with GitHub Copilot enabled and signed in. After creating this repository and knowledge-docs, install APM and authenticate GitHub, then run the pinned command in a terminal at the repository root. It deploys the agents and prompt files used by this tab.</p>
+          {renderPromptBlock(installation.apm)}
+          <p>Reload VS Code, open Copilot Chat and type <code>/</code>. Confirm the <code>/squad</code> and <code>/squad-federation</code> <strong>prompt</strong> entries are present. Choose the entry described as handing a request to the coordinator, not a same-named skill.</p>
+          <p className="small">If the prompt files are already installed, inspect them rather than reinstalling. Do not layer conflicting APM and plug-in copies over each other. This tab uses APM for reproducible prompt availability; it does not alter your saved App/CLI installation choice.</p>
+        </section> : <>
         <div className="segmented" aria-label="Installation method">
           {(['plugin', 'apm'] as const).map(value => <button type="button" key={value} aria-pressed={saved.settings.install === value} onClick={() => updateSetting('install', value)}>{value === 'plugin' ? 'Plug-in · recommended' : 'APM · pinned'}</button>)}
         </div>
@@ -189,13 +200,14 @@ function App() {
         {saved.settings.install === 'plugin' && saved.settings.experience === 'app'
           ? <div className="app-install"><h3>Install through the App’s Plugins settings</h3><ol><li>Open Plugins settings and find the <code>Peter-N91/hve-squad-plugin</code> marketplace.</li><li>Install both <code>hve-squad</code> and <code>hve-squad-hve-core</code>.</li><li>Return to the agent dropdown and confirm the coordinator agents are available.</li></ol><p className="small">Use the <a href="https://peter-n91.github.io/hve-squad-plugin/install-desktop.html" target="_blank" rel="noreferrer">App installation guide</a> for the host’s current settings labels. A standalone CLI installation may use a different plug-in home.</p></div>
           : renderPromptBlock(installation[saved.settings.install])}
+        </>}
         <details><summary>Power Platform pack dependencies</summary>
           <p>The pack’s external resources are not guaranteed to be installed by HVE Squad. The commands below follow the versioned external-cast catalog. They resolve upstream default revisions: review and freeze their resolved versions before the session. APM can install these supplementary project assets even when Squad itself is installed as a plug-in.</p>
           {renderPromptBlock(packSetup)}
           <p>These authoring specialists do not grant tenant permissions. PAC or connector deployment remains a separately approved action.</p>
         </details>
-        <details><summary>App setup and Azure DevOps MCP</summary>
-          <p>The App and CLI expose tools differently. Use the App’s agent dropdown and MCP settings; in the CLI select the agent with /agent. Do not paste a VS Code MCP configuration into another host blindly. Confirm availability with the readiness probe. Each client may use its own plug-in home; a terminal installation does not prove the App has the same assets.</p>
+        <details><summary>Client setup and Azure DevOps MCP</summary>
+          <p>App: use the agent dropdown and that client’s MCP settings. CLI: use /agent and its own MCP configuration. VS Code: use the installed slash prompts and the official Azure DevOps MCP instructions for VS Code. Do not paste one host’s configuration into another blindly. Each client can have separate installed assets and authentication.</p>
           <p>Configure the official <a href={sources[5].url} target="_blank" rel="noreferrer">Azure DevOps MCP</a> for your host. It needs Node and supported interactive authentication. Your organization, project, process, work-item permissions and documentation destination must be confirmed. Never paste credentials into this site, prompts or repository files.</p>
         </details>
       </div>}
@@ -278,34 +290,35 @@ function App() {
       </aside>
       <main id="main" className="main-content" ref={heading} tabIndex={-1}>
         <div className="content-toolbar">
-          <div className="segmented" role="tablist" aria-label="Copilot experience">{(['app', 'cli'] as const).map(value => <button
+          <div className="segmented" role="tablist" aria-label="Copilot experience">{experiences.map(value => <button
             type="button" role="tab" id={`experience-${value}`} key={value}
             aria-selected={saved.settings.experience === value} aria-controls="experience-panel"
             tabIndex={saved.settings.experience === value ? 0 : -1}
             onClick={() => updateSetting('experience', value)}
             onKeyDown={event => {
-              const next = event.key === 'Home' ? 'app' : event.key === 'End' ? 'cli'
-                : ['ArrowLeft', 'ArrowRight'].includes(event.key) ? (value === 'app' ? 'cli' : 'app') : undefined
+              const next = nextExperience(value, event.key)
               if (next) {
                 event.preventDefault()
                 updateSetting('experience', next)
                 document.getElementById(`experience-${next}`)?.focus()
               }
-            }}>{value === 'cli' ? 'Copilot CLI' : 'Copilot App'}</button>)}</div>
+            }}>{experienceLabels[value]}</button>)}</div>
           <div><button type="button" aria-pressed={focusMode} onClick={() => setFocusMode(!focusMode)}>{focusMode ? 'Show navigation' : 'Focus view'}</button><button type="button" onClick={() => window.print()}>Print guide</button></div>
         </div>
         <section className="experience-panel" id="experience-panel" role="tabpanel" aria-labelledby={`experience-${saved.settings.experience}`} tabIndex={0}>
           {page === 'prepare' ? <div>
             <span className="eyebrow">PREPARE THE PROJECT FIRST</span><h2>Repository → knowledge-docs → installation</h2>
             <p>Create your local project and place the business case in knowledge-docs before installing APM assets or the paired plug-ins.</p>
-            <p className="small">The tabs choose your Copilot client. Agent selection comes after preparation and installation.</p>
-          </div> : <div><span className="eyebrow">SELECT THE AGENT FIRST</span><h2>{selection.name}</h2>
+            <p className="small">The tabs choose your Copilot client. {vscode ? 'VS Code uses the repository-scoped APM installation and slash prompts below.' : 'Agent selection comes after preparation and installation.'}</p>
+          </div> : <div><span className="eyebrow">{vscode ? 'RUN THE PROMPT IN COPILOT CHAT' : 'SELECT THE AGENT FIRST'}</span><h2>{vscode ? selection.identifier : selection.name}</h2>
             <p>{selection.instruction}</p>
-            <p className="small">Look for <code>{selection.identifier}</code>{saved.settings.install === 'plugin' ? ' if the picker shows namespaced labels.' : ' in the repository’s installed agents.'}</p>
-            <p className="small">Then paste the plain-language request in that agent’s chat. Do not select a similarly named skill. Stay in your own implementation project.</p>
+            {vscode ? <p className="small">Use the prompt files installed by APM. The complete block below includes the correct request and mode parameters. See <a href="#prepare">VS Code preparation</a> if the prompt is missing.</p>
+              : <p className="small">Look for <code>{selection.identifier}</code>{saved.settings.install === 'plugin' ? ' if the picker shows namespaced labels.' : ' in the repository’s installed agents.'} Then paste the complete request into that agent’s chat.</p>}
+            <p className="small">Stay in your own implementation project. Select a prompt in VS Code or an agent in App/CLI, not a similarly named skill.</p>
           </div>}
           {page !== 'prepare' && saved.settings.experience === 'cli' && <button type="button" onClick={() => copy('/agent')}>Copy /agent</button>}
         </section>
+        <aside className="mode-notice" aria-label="Workshop execution mode"><strong>Autopilot for requests · not for init or promote</strong><p>{modeGuidance}</p></aside>
         {storageError && <div className="notice warning" role="alert">{storageError}<button type="button" onClick={() => setResetOpen(true)}>Review reset options</button></div>}
         <div className="status" role="status" aria-live="polite">{status}</div>
         {page === 'overview' ? <>
@@ -316,7 +329,7 @@ function App() {
             <div className="hero-actions"><a className="button primary" href="#prepare">Start with prerequisites <span>→</span></a><a className="button" href="#product">Jump into the lab</a></div>
             <div className="hero-meta"><span><strong>3 hours</strong>guided practice</span><span><strong>30 minutes</strong>discussion</span><span><strong>Your project</strong>your evidence</span></div>
           </section>
-          <section className="method-note"><h2>Set up first. Then ask for the work.</h2><p><strong>Planning init → product request → publication → promote → delivery init → implementation request.</strong> Setup and business work are separate messages. Use init and promote in the selected agent’s chat, with context that lets it recommend the profiles.</p><p>The business requests stay outcome-led. Intake, specialist selection and review remain behaviors to observe, not procedures to dictate. Confirm each setup result before advancing; the guide’s checkboxes do not execute or approve anything.</p></section>
+          <section className="method-note"><h2>Set up first. Then ask for the work.</h2><p><strong>Planning init → product request → publication → promote → delivery init → implementation request.</strong> Init and promote stay interactive, without autopilot. Every other request carries <code>mode="autopilot"</code>, including readiness and resume.</p><p>Choose App or CLI for agent-chat requests, or VS Code for slash prompts. The business wording stays outcome-led; autopilot coordinates the work but never bypasses required human approvals. The guide’s checkboxes do not execute or approve anything.</p></section>
           <section className="journey-panel"><div className="section-heading"><h2>One connected workflow</h2><span className="badge">LEARN THE METHOD</span></div>
             <div className="journey"><div><span>01</span><strong>Product</strong><small>MVE · BRD · PRD</small></div><span className="arrow">→</span><div><span>02</span><strong>Azure DevOps</strong><small>Backlog · traceability</small></div><span className="arrow">→</span><div><span>03</span><strong>Federation</strong><small>Product + implementation</small></div><span className="arrow">→</span><div><span>04</span><strong>Implementation</strong><small>Plan · build · review</small></div></div>
           </section>
@@ -331,7 +344,7 @@ function App() {
           <div className="eyebrow">KEEP MOVING, WITHOUT GUESSING</div><h1>Resources & recovery</h1><p className="lead">Keep the reference close. Keep the evidence honest.</p>
           <section className="resource-downloads"><h2>Your working templates</h2><p>Blank worksheets, not prebuilt project state or fabricated results. Save filled copies in your private implementation project.</p><a className="button primary" href={`${import.meta.env.BASE_URL}downloads/checkpoint-worksheet.txt`} download>Checkpoint worksheet</a><a className="button" href={`${import.meta.env.BASE_URL}downloads/federation-handoff.txt`} download>Federation handoff checklist</a></section>
           <section><h2>When something goes wrong</h2>{troubleshooting.map(([title, body]) => <details key={title}><summary>{title}</summary><p>{body}</p></details>)}</section>
-          <section><h2>Versioned reference material</h2><p>The lesson mechanics are grounded in HVE Squad v{baseline}. This workshop selects the coordinator agent directly: App dropdown or CLI /agent, followed by a plain-language request. Source documentation may also describe other entry points; those are not this workshop’s path.</p><ul className="source-list">{sources.map(source => <li key={source.url}><a href={source.url} target="_blank" rel="noreferrer">{source.name} ↗</a></li>)}</ul><p className="small">MVE concepts are paraphrased from Microsoft HVE Core experiment-design guidance (CC BY 4.0); the teaching sequence and requests are workshop adaptations. HVE Squad references and the original logo are MIT licensed. The website uses the official dark green/blue palette with contrast-adjusted light/print variants. <a href={`${import.meta.env.BASE_URL}THIRD-PARTY-NOTICES.txt`}>Logo attribution and license</a>.</p></section>
+          <section><h2>Versioned reference material</h2><p>The lesson mechanics are grounded in HVE Squad v{baseline}. App/CLI select the agent directly; VS Code runs /squad or /squad-federation prompt files. Every non-setup request includes mode="autopilot". Single-squad init is expressed inside request; federation init and promote are explicit prompt inputs. No profile is preselected.</p><ul className="source-list">{sources.map(source => <li key={source.url}><a href={source.url} target="_blank" rel="noreferrer">{source.name} ↗</a></li>)}</ul><p className="small">MVE concepts are paraphrased from Microsoft HVE Core experiment-design guidance (CC BY 4.0); the teaching sequence and requests are workshop adaptations. HVE Squad references and the original logo are MIT licensed. The website uses the official dark green/blue palette with contrast-adjusted light/print variants. <a href={`${import.meta.env.BASE_URL}THIRD-PARTY-NOTICES.txt`}>Logo attribution and license</a>.</p></section>
           <section><h2>Browser data</h2><p>Progress and target settings stay in this browser’s local storage. They are not shared with the facilitator or synchronized across devices. Export contains your target settings: inspect it before sharing.</p><button type="button" onClick={() => download('qubix-workshop-progress.json', JSON.stringify(saved, null, 2), 'application/json')}>Export progress</button><button type="button" className="danger" onClick={() => setResetOpen(true)}>Reset browser data</button></section>
         </article> : <section><h1>Stage not found</h1><p>This link does not match a workshop stage.</p><a href="#overview">Return to the overview</a></section>}
         {active && <nav className="lesson-navigation" aria-label="Previous and next stage"><a href={`#${previousLesson?.id ?? 'overview'}`}>← {previousLesson?.title ?? 'Workshop overview'}</a><a className="button primary" href={`#${nextLesson?.id ?? 'resources'}`}>{nextLesson?.title ?? 'Resources & recovery'} →</a></nav>}

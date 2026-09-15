@@ -17,7 +17,7 @@ facilitator runbook, credentials or tenant identifiers belong in this repo.
 CONTENT
 src/content.ts: phase kickoff requests, review checkpoints, sources and recovery.
 src/state.ts: browser progress, agent selection and target personalization.
-src/App.tsx: App/CLI tabs, navigation, controls, local settings, print/export.
+src/App.tsx: App/CLI/VS Code tabs, navigation, controls, local settings, print/export.
 public/downloads/: empty participant worksheets, no completed examples.
 public/hve-squad-logo.svg: official unmodified HVE Squad logo.
 public/THIRD-PARTY-NOTICES.txt: logo source and license.
@@ -31,7 +31,18 @@ It ignores knowledge-docs in Git by default to avoid accidental publication;
 Copilot must be allowed to read the explicitly referenced local document.
 App: select the coordinator in the agent dropdown.
 CLI: type /agent and select the coordinator.
-Then paste the same plain-language request, with no slash-prompt wrapper.
+For App/CLI, paste mode="autopilot" followed by the plain-language request.
+VS Code: use the pinned, repository-scoped APM installation to deploy the
+/squad and /squad-federation prompt files. Choose prompts, not skills.
+Paste the generated slash command with mode="autopilot" and request="...".
+The VS Code tab uses APM without changing the saved App/CLI install preference.
+
+MODE RULE
+Every non-setup request includes mode="autopilot", including PDF-readiness
+questions and resume requests. The guide adds it to display/copy/print.
+Init and promote never include autopilot. Shell commands are unchanged.
+Autopilot retains scope, mandatory human approvals and final validation.
+It does not authorize publication, deployments, or expanding read-only questions.
 SETUP AND WORK ARE DISTINCT:
 1. In Squad Coordinator, send init with planning context; confirm the
    inferred product-profile team and stop after initialization.
@@ -54,7 +65,10 @@ Implementation uses the agreed backlog to fulfill the first release. If the
 release is not defined, agree a coherent prioritized slice before building.
 The session can end with incomplete release items; the last 30 minutes stay
 reserved for discussion.
-init and promote are messages to the selected agent, not shell commands.
+App/CLI init and promote are messages to the selected agent, not shell commands.
+VS Code uses /squad request="init..." for planning setup (the /squad prompt
+has no init input), then /squad-federation promote request="..." and
+/squad-federation init request="..." for federation setup. None includes mode.
 The guide has three explicit, self-reported setup checkpoints. Dependent
 Copy buttons stay disabled until setup is confirmed; these browser controls
 do not inspect the actual project or authorize the agent.
@@ -62,7 +76,7 @@ Copied requests state business outcomes without naming internal agents,
 profiles, packs, gates, state paths or execution procedures.
 Expected automatic behavior is described separately in observation panels.
 The squad should propose its approach and required additions itself, with
-consent where required. Do not assume these requests enable autopilot.
+consent where required. Non-setup requests explicitly select autopilot.
 Business requests do not prescribe internals. The lifecycle verbs init and
 promote are intentionally explicit in the separate setup messages.
 Missing behavior must be recorded, not quietly scripted into a work request.
